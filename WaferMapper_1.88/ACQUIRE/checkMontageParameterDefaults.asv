@@ -1,0 +1,148 @@
+function[] = checkMontageParameterDefaults()
+
+global GuiGlobalsStruct
+
+currentFields = fields(GuiGlobalsStruct.MontageParameters);
+
+
+
+%% Set Default Paramets
+defaultMontageParameters.TileFOV_microns = 40.96;
+defaultMontageParameters.TileWidth_pixels = 4096;
+defaultMontageParameters.TileDwellTime_microseconds = 1;
+
+defaultMontageParameters.MontageNorthAngle = 0;
+defaultMontageParameters.NumberOfTileRows = 3;
+defaultMontageParameters.NumberOfTileCols = 3;
+defaultMontageParameters.PercentTileOverlap = 6;
+defaultMontageParameters.XOffsetFromAlignTargetMicrons = 0;
+defaultMontageParameters.YOffsetFromAlignTargetMicrons = 0;
+defaultMontageParameters.MicronsPerPixel = (defaultMontageParameters.TileFOV_microns/defaultMontageParameters.TileWidth_pixels);
+
+defaultMontageParameters.AF_X_Offset_Microns = 0;
+defaultMontageParameters.AF_Y_Offset_Microns = 0;
+
+defaultMontageParameters.AutoFocusStartMag = 25000;
+defaultMontageParameters.IsPerformQualityCheckOnEveryAF = false;
+defaultMontageParameters.AFQualityThreshold = 3;
+defaultMontageParameters.IsPerformQualCheckAfterEachImage = false;
+defaultMontageParameters.ImageQualityThreshold = 3;
+
+defaultMontageParameters.NoAuto = false;
+defaultMontageParameters.IsSingle_AF_ForWholeMontage = false;
+defaultMontageParameters.IsSingle_AFASAF_ForWholeMontage = true;
+defaultMontageParameters.IsAFOnEveryTile = false;
+defaultMontageParameters.IsAFASAFOnEveryTile = false;
+defaultMontageParameters.IsPlaneFit = false;
+defaultMontageParameters.IsXFit = false;
+defaultMontageParameters.Is4square = false;
+defaultMontageParameters.RowDistBetweenAFPointsMicrons = 50;
+defaultMontageParameters.ColDistBetweenAFPointsMicrons = 50;
+defaultMontageParameters.AutofunctionScanrate = 1;
+defaultMontageParameters.AutoFunctionImageStore = 0;
+defaultMontageParameters.IBSCContrast = 24;
+defaultMontageParameters.IBSCBrightness = 45;
+defaultMontageParameters.ImageContrast = 25;
+defaultMontageParameters.ImageBrightness = 44;
+defaultMontageParameters.retakeFocusType = 1;
+
+defaultMontageParameters.IsAcquireOverviewImage = false;
+defaultMontageParameters.MontageOverviewImageFOV_microns = 409.6;
+defaultMontageParameters.MontageOverviewImageWidth_pixels = 4096;
+defaultMontageParameters.MontageOverviewImageHeight_pixels = 4096;
+defaultMontageParameters.MontageOverviewImageDwellTime_microseconds = 1;
+
+defaultMontageParameters.AFStartingWD = .007; %In meters
+% defaultMontageParameters.StartingStigX = GuiGlobalsStruct.MyCZEMAPIClass.Get_ReturnTypeSingle('AP_STIG_X'); %In percent
+% defaultMontageParameters.StartingStigY = GuiGlobalsStruct.MyCZEMAPIClass.Get_ReturnTypeSingle('AP_STIG_Y'); %In percent
+defaultMontageParameters.StartingStigX = 0.0; %In percent
+defaultMontageParameters.StartingStigY = 0.0; %In percent
+
+defaultMontageParameters.StigResetThreshold = 1.0; %In percent
+defaultMontageParameters.WDResetThreshold = 0.0005; %m
+
+defaultMontageParameters.AFTestImageFOV_microns = 40.96;
+defaultMontageParameters.AFTestImageWidth_pixels = 4096;
+defaultMontageParameters.AFTestImageDwellTime_microseconds = 1.0;
+defaultMontageParameters.IsAFTestSameAsTileParameters = 0;
+
+defaultFields = fields(defaultMontageParameters);
+
+for i = 1:length(defaultFields) 
+    if ~sum(cell2mat(regexp(currentFields,defaultFields{i})))
+       set(GuiGlobalsStruct.MontageParameters, defaultFields{i}
+    end
+end
+
+
+
+
+
+
+
+
+
+%%
+if ~isfield(GuiGlobalsStruct.MontageParameters,'IsTargetFocus')
+    GuiGlobalsStruct.MontageParameters.IsTargetFocus = true;
+end
+
+set(handles.TileFOV_microns_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.TileFOV_microns));
+set(handles.TileWidth_pixels_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.TileWidth_pixels));
+set(handles.PixelSize_edit, 'String', num2str(1000*(GuiGlobalsStruct.MontageParameters.TileFOV_microns/GuiGlobalsStruct.MontageParameters.TileWidth_pixels)));
+set(handles.TileDwellTime_microseconds_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.TileDwellTime_microseconds));
+
+set(handles.MontageNorthAngle_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.MontageNorthAngle));
+set(handles.NumberOfTileRows_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.NumberOfTileRows));
+set(handles.NumberOfTileCols_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.NumberOfTileCols));
+set(handles.PercentTileOverlap_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.PercentTileOverlap));
+set(handles.XOffsetFromAlignTargetMicrons_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.XOffsetFromAlignTargetMicrons));
+set(handles.YOffsetFromAlignTargetMicrons_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.YOffsetFromAlignTargetMicrons));
+
+set(handles.AF_X_Offset_Microns_edit, 'String',num2str(GuiGlobalsStruct.MontageParameters.AF_X_Offset_Microns));
+set(handles.AF_Y_Offset_Microns_edit, 'String',num2str(GuiGlobalsStruct.MontageParameters.AF_Y_Offset_Microns));
+
+set(handles.AutofocusStartMag_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AutoFocusStartMag));
+set(handles.IsPerformQualityCheckOnEveryAF_checkbox, 'Value', GuiGlobalsStruct.MontageParameters.IsPerformQualityCheckOnEveryAF);
+set(handles.AFQualityThreshold_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AFQualityThreshold));
+set(handles.IsPerformQualCheckAfterEachImage_checkbox,'Value', GuiGlobalsStruct.MontageParameters.IsPerformQualCheckAfterEachImage);
+set(handles.ImageQualityThreshold_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.ImageQualityThreshold));
+if ~isfield(GuiGlobalsStruct.MontageParameters,'IsTargetFocus')
+    GuiGlobalsStruct.MontageParameters.IsTargetFocus = true;
+end
+set(handles.IsTargetFocus_checkbox,'Value', GuiGlobalsStruct.MontageParameters.IsTargetFocus);
+set(handles.NoAuto_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.NoAuto);
+set(handles.IsSingle_AF_ForWholeMontage_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsSingle_AF_ForWholeMontage);
+set(handles.IsSingle_AFASAF_ForWholeMontage_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsSingle_AFASAF_ForWholeMontage);
+set(handles.IsAFOnEveryTile_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsAFOnEveryTile);
+set(handles.IsAFASAFOnEveryTile_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsAFASAFOnEveryTile);
+set(handles.IsPlaneFit_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsPlaneFit);
+
+set(handles.IsXFit_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsXFit);
+
+set(handles.RowDistBetweenAFPointsMicrons_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.RowDistBetweenAFPointsMicrons));
+set(handles.ColDistBetweenAFPointsMicrons_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.ColDistBetweenAFPointsMicrons));
+set(handles.AutofunctionScanrate_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AutofunctionScanrate));
+set(handles.AutoFunctionImageStore_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AutoFunctionImageStore));
+set(handles.IBSCContrast_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.IBSCContrast));
+set(handles.IBSCBrightness_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.IBSCBrightness));
+set(handles.ImageContrast_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.ImageContrast));
+set(handles.ImageBrightness_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.ImageBrightness));
+set(handles.AFStartingWD_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AFStartingWD*1000)); % Need to convert back to mm
+set(handles.WDResetThreshold_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.WDResetThreshold*1000)); % Need to convert back to mm
+set(handles.StartingStigX_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.StartingStigX));
+set(handles.StartingStigY_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.StartingStigY));
+set(handles.StigResetThreshold_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.StigResetThreshold));
+set(handles.AFTestImageFOV_microns_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AFTestImageFOV_microns));
+set(handles.AFTestImageWidth_pixels_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AFTestImageWidth_pixels));
+set(handles.AFTestImageDwellTime_microseconds_edit, 'String', num2str(GuiGlobalsStruct.MontageParameters.AFTestImageDwellTime_microseconds));
+set(handles.SameAsTileParameters_checkbox, 'Value', GuiGlobalsStruct.MontageParameters.IsAFTestSameAsTileParameters);
+
+
+set(handles.IsAcquireOverviewImage_checkbox, 'Value', GuiGlobalsStruct.MontageParameters.IsAcquireOverviewImage);
+set(handles.MontageOverviewImageFOV_microns_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.MontageOverviewImageFOV_microns));
+set(handles.MontageOverviewImageWidth_pixels_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.MontageOverviewImageWidth_pixels));
+set(handles.MontageOverviewImageHeight_pixels_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.MontageOverviewImageHeight_pixels));
+set(handles.MontageOverviewImageDwellTime_microseconds_edit,'String',num2str(GuiGlobalsStruct.MontageParameters.MontageOverviewImageDwellTime_microseconds));
+
+
