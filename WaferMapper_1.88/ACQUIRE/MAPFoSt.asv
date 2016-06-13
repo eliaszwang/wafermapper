@@ -1,17 +1,12 @@
-function [z,a_on,a_diag]=MAPFoSt(CurrentWorkingDistance,FOV, ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds, AccV)
+function [z,a_on,a_diag]=MAPFoSt(CurrentWorkingDistance,FImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds, AccV)
 % Elias Wang's implementation of MAPFoSt
 % algorithm adapted from Jonas Binding (Low-Dosage Maximum-A-Posteriori Focusing and Stigmation)
-% should replace "sm.Execute('CMD_AUTO_FOCUS_FINE')" calls
+% should replace "sm.Set_PassedTypeSingle('AP_WD',____)" calls
 global GuiGlobalsStruct;
-%set AccV as optional for now
-if ~exist('AccV','var')
-    AccV=100; %just random number, need to be changed
-end
-% hardcoded test aberrations (defocus only)
+%hardcoded test aberrations (defocus only)
 T1=[15 0 0]; %defocus in [um]
 T2=[-15 0 0];
 sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables in this function
-
 targetFocus = GuiGlobalsStruct.MontageParameters.IsTargetFocus;
 WDResetThreshold = GuiGlobalsStruct.MontageParameters.WDResetThreshold;
 
@@ -21,11 +16,10 @@ if ~exist('focOptions','var')
    focOptions.QualityThreshold = 0;
 end
 
-% Passed through parameters
 % ImageHeightInPixels = 100; %currently MAPFoSt only compatible with square images
 % ImageWidthInPixels = 100;
 % DwellTimeInMicroseconds = 0.2;
-% FOV = GuiGlobalsStruct.MontageParameters.TileFOV_microns;
+FOV = GuiGlobalsStruct.MontageParameters.TileFOV_microns;
 
 
 AFscanRate = GuiGlobalsStruct.MontageParameters.AutofunctionScanrate;
@@ -109,11 +103,11 @@ while ~IsReadOK
     end
 end
 
-%% Find MAP
-% initialize minimization at [0 0 0]
+%%Find MAP
+%initialize minimization at [0 0 0]
 A=minimize([0 0 0],@MAP,5,I1,I2,T1,T2,FOV,AccV);
 
-% set new WD/Stig from algorithm
+%set new WD/Stig from algorithm
 z=A(1);
 a_on=A(2);
 a_diag=A(3);
