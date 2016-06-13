@@ -1,65 +1,22 @@
-function [z,a_on,a_diag]=MAPFoSt(CurrentWorkingDistance,FOV, ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds, AccV)
+function [z,a_on,a_diag]=MAPFoSt(CurrentWorkingDistance,FOV, ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds, AccV, FileName)
 % Elias Wang's implementation of MAPFoSt
 % algorithm adapted from Jonas Binding (Low-Dosage Maximum-A-Posteriori Focusing and Stigmation)
 % should replace "sm.Execute('CMD_AUTO_FOCUS_FINE')" calls
 global GuiGlobalsStruct;
+sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables in this function
+
 %set AccV as optional for now
 if ~exist('AccV','var')
     AccV=100; %just random number, need to be changed
 end
+    
 % hardcoded test aberrations (defocus only)
 T1=[15 0 0]; %defocus in [um]
 T2=[-15 0 0];
-sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables in this function
-
-targetFocus = GuiGlobalsStruct.MontageParameters.IsTargetFocus;
-WDResetThreshold = GuiGlobalsStruct.MontageParameters.WDResetThreshold;
-
-
-if ~exist('focOptions','var')
-   focOptions.IsDoQualCheck = 0;
-   focOptions.QualityThreshold = 0;
-end
-
-% Passed through parameters
-% ImageHeightInPixels = 100; %currently MAPFoSt only compatible with square images
-% ImageWidthInPixels = 100;
-% DwellTimeInMicroseconds = 0.2;
-% FOV = GuiGlobalsStruct.MontageParameters.TileFOV_microns;
-
-
-AFscanRate = GuiGlobalsStruct.MontageParameters.AutofunctionScanrate;
-AFImageStore= GuiGlobalsStruct.MontageParameters.AutoFunctionImageStore;
-
-if exist(GuiGlobalsStruct.TempImagesDirectory,'dir')
-    FileName = [GuiGlobalsStruct.TempImagesDirectory '\tempFoc.tif'];
-else
-    FileName = 'C:\temp\temFoc.tif';
-end
-
-
-s = FOV/ImageHeightInPixels/1000000; %scale meters per pixel
-
-
-StartingMagForAF =GuiGlobalsStruct.MontageParameters.AutoFocusStartMag;
-StartingMagForAS = GuiGlobalsStruct.MontageParameters.AutoFocusStartMag;
-startScanRot = sm.Get_ReturnTypeSingle('AP_SCANROTATION');
 
 %Reset initial WD using AFStartingWDd from Montage Parameters -- should not be needed
 % sm.Set_PassedTypeSingle('AP_WD',GuiGlobalsStruct.MontageParameters.AFStartingWD);
 % CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
-
-%Reset initial stig values using StartingStigX and StartingStigY from
-%Montage Parameters
-startStigX = GuiGlobalsStruct.MontageParameters.StartingStigX;
-startStigY = GuiGlobalsStruct.MontageParameters.StartingStigY;
-
-stage_x = sm.Get_ReturnTypeSingle('AP_STAGE_AT_X');
-stage_y = sm.Get_ReturnTypeSingle('AP_STAGE_AT_Y');
-stage_z = sm.Get_ReturnTypeSingle('AP_STAGE_AT_Z');
-stage_t = sm.Get_ReturnTypeSingle('AP_STAGE_AT_T');
-stage_r = sm.Get_ReturnTypeSingle('AP_STAGE_AT_R');
-stage_m = sm.Get_ReturnTypeSingle('AP_STAGE_AT_M');
 
 %%Take first image
 %implement errorcheck for test aberration
