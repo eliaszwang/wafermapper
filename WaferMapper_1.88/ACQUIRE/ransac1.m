@@ -48,11 +48,12 @@ function [f inlierIdx] = ransac1( x,y,ransacCoef,funcFindF,funcDist,funcDet )
             inlier1 = find(dist < thDist);
             inlrNum(p) = length(inlier1);
             if length(inlier1) < thInlr, continue; end
-           
             fLib{p} = funcFindF(x(:,inlier1),y(:,inlier1));
+
             if abs(1-sqrt(funcDet(fLib{p})))>thDet
                 inlrNum(p)=0;
             end
+            
         end
     end
 

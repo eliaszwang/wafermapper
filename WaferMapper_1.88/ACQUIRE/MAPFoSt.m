@@ -1,4 +1,4 @@
-function [z,a_on,a_diag]=MAPFoSt(CurrentWorkingDistance,FOV, ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds, AccV, FileName)
+function [z,a_on,a_diag]=MAPFoSt(FOV,ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,AccV)
 % Elias Wang's implementation of MAPFoSt
 % algorithm adapted from Jonas Binding (Low-Dosage Maximum-A-Posteriori Focusing and Stigmation)
 % should replace "sm.Execute('CMD_AUTO_FOCUS_FINE')" calls
@@ -16,11 +16,15 @@ T2=[-15 0 0];
 
 %Reset initial WD using AFStartingWDd from Montage Parameters -- should not be needed
 % sm.Set_PassedTypeSingle('AP_WD',GuiGlobalsStruct.MontageParameters.AFStartingWD);
-% CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
+
+%Get current values for WD and Stig
+CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
+ResultStigX =sm.Get_ReturnTypeSingle('AP_STIG_X');
+ResultStigY =sm.Get_ReturnTypeSingle('AP_STIG_Y');
 
 %%Take first image
 %implement errorcheck for test aberration
-sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+T1(1)); %change WD to testing defocus
+sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T1(1)); %change WD to testing defocus
 sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
 
 sm.Fibics_WriteFOV(FOV);
@@ -44,7 +48,7 @@ end
 
 %%Take second image
 %implement errorcheck for test aberration
-sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+T2(1)); %change WD to testing defocus
+sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T2(1)); %change WD to testing defocus
 sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
 
 sm.Fibics_WriteFOV(FOV);
@@ -68,12 +72,14 @@ end
 
 %% Find MAP
 % initialize minimization at [0 0 0]
+%set to 5 iterations for now
 A=minimize([0 0 0],@MAP,5,I1,I2,T1,T2,FOV,AccV);
 
 % set new WD/Stig from algorithm
 z=A(1);
 a_on=A(2);
 a_diag=A(3);
-sm.Set_PassedTypeSingle('AP_WD',A(1));
-sm.Set_PassedTypeSingle('AP_STIG_X',A(2));
-sm.Set_PassedTypeSingle('AP_STIG_Y',A(3));
+sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*A(1));
+sm.Set_PassedTypeSingle('AP_STIG_X',ResultStigX+10^-6*A(2));
+sm.Set_PassedTypeSingle('AP_STIG_Y',ResultStigY+10^-6*A(3));
+end

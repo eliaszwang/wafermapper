@@ -4,11 +4,11 @@ function [f, df]=MAP(A,I1,I2,T1,T2,FOV,Acc)
 
 %% Initialize/calculate constants
 %Calculate fft of two images
-fI1=fft2(I1);
+fI1=fft2(I1); %image should have dimension 2^n for faster FFT
 fI2=fft2(I2);
 height=size(I1,1);
 width=size(I1,2);
-PixSize = FOV/height/1000000; % meters per pixel
+PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 %NA=5; %set NA to 5 mrad-based of paper, needs to be changed
 NA= 0.752 / (PixSize* (Acc*1000)^0.5); %confirm units for PixSize
