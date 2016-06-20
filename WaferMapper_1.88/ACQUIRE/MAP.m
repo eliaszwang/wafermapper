@@ -14,9 +14,9 @@ A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be c
 NA= 0.752 / (PixSize* (Acc*1000)^0.5); %confirm units for PixSize
 %sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]);
-cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
-cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
-[Kx, Ky]=meshgrid([1:width]*(6.28/FOV),[1:height]*(6.28/FOV)); %units are rad/um?
+%cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
+%cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
+[Kx, Ky]=meshgrid([0:width-1]/width*(6.28/FOV),[0:height-1]/height*(6.28/FOV)); %units are rad/um?
 %Kx=[1:width]*(6.28/FOV);
 %Ky=[1:height]*(6.28/FOV);
 
