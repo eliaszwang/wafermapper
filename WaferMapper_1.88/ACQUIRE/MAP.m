@@ -23,21 +23,32 @@ sigma =mean([std(double(I1(:))), std(double(I2(:)))]);
 %% Setup probability functions for MAPFoSt
 p_A=@(A)  (max([abs(A(1)),abs(A(2)),abs(A(3))])<=A_max)/((2*A_max)^3); %uniform distribtion over cube of side 2*A_max
 %MTF=@(kx,ky,A) exp(-0.125*NA^2*(2*A(2)*(kx^2-ky^2)*A(1)-A(3)*kx*ky*A(1)+(kx^2+ky^2)*(A(1)^2+A(2)^2+A(3)^2))); %check for typos
-MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2).*(A(2)^2 + A(3)^2 + A(1)^2)));
-f=-log(p_A(A))+sum(sum( (abs(fI2.*MTF(Kx,Ky,A+T1) - fI1.*MTF(Kx,Ky,A+T2)).^2) ./ (2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2)+1e-10) ));
+MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+%f=-log(p_A(A))+sum(sum( (abs(fI2.*MTF(Kx,Ky,A+T1) - fI1.*MTF(Kx,Ky,A+T2)).^2) ./ (2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2)+1e-10) ));
+% f=sum(sum( (abs(fI2.*MTF(Kx,Ky,A+T1) - fI1.*MTF(Kx,Ky,A+T2)).^2) ./ (2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2)+1e-10) ));
 
 %MTF equation used to calculate partial derivatives in Wolfram
 %exp(-0.125*(N^2)*(2a*(x^2-y^2)*z-b*x*y*z+(x^2+y^2)(a^2+b^2+z^2)))
-const=-0.125*(NA^2)*exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2).*(A(2)^2 + A(3)^2 + A(1)^2)));
-dMTFd1=@(Kx,Ky,A) (2*A(2)*(Kx.^2 - Ky.^2) + 2*A(1)*(Kx.^2 + Ky.^2) - A(3)*Kx.*Ky).*const;
-dMTFd2=@(Kx,Ky,A) (2*A(2)*(Kx.^2 + Ky.^2) + 2*A(1)*(Kx.^2 - Ky.^2)).*const;
-dMTFd3=@(Kx,Ky,A) (2*A(3)*(Kx.^2 + Ky.^2) - A(1)*Kx.*Ky).*const;
+% const=-0.125*(NA^2)*exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+% dMTFd1=@(Kx,Ky,A) (2*A(2)*(Kx.^2 - Ky.^2) + 2*A(1)*(Kx.^2 + Ky.^2) - A(3)*Kx.*Ky).*const;
+% dMTFd2=@(Kx,Ky,A) (2*A(2)*(Kx.^2 + Ky.^2) + 2*A(1)*(Kx.^2 - Ky.^2)).*const;
+% dMTFd3=@(Kx,Ky,A) (2*A(3)*(Kx.^2 + Ky.^2) - A(1)*Kx.*Ky).*const;
+% 
+% Hi=((fI2.*MTF(Kx,Ky,A+T1) - fI1.*MTF(Kx,Ky,A+T2)).^2);
+% Lo=(2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2)+1e-10);
+% 
+% df(1)= sum(sum( (Lo.*(fI2.*dMTFd1(Kx,Ky,A+T1) - fI1.*dMTFd1(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFd1(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFd1(Kx,Ky,A+T2)))) ./ Lo.^2 ));
+% df(2)= sum(sum( (Lo.*(fI2.*dMTFd2(Kx,Ky,A+T1) - fI1.*dMTFd2(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFd2(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFd2(Kx,Ky,A+T2)))) ./ Lo.^2 ));
+% df(3)= sum(sum( (Lo.*(fI2.*dMTFd3(Kx,Ky,A+T1) - fI1.*dMTFd3(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFd3(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFd3(Kx,Ky,A+T2)))) ./ Lo.^2 ));
 
+%for single aberration mode
+MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
+dMTFdz=@(Kx,Ky,A) -0.25*(NA^2)*(Kx.^2+Ky.^2)*A.*exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 Hi=((fI2.*MTF(Kx,Ky,A+T1) - fI1.*MTF(Kx,Ky,A+T2)).^2);
-Lo=(2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2)+1e-10);
+Lo=(2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2));
+df=sum(sum( (Lo.*(fI2.*dMTFdz(Kx,Ky,A+T1) - fI1.*dMTFdz(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFdz(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFdz(Kx,Ky,A+T2)))) ./ Lo.^2 ));
+df=sum(sum( (2*(MTF(Kx,Ky,A+T1).*dMTFdz(Kx,Ky,A+T2)-MTF(Kx,Ky,A+T2).*dMTFdz(Kx,Ky,A+T1)).*(fI2.*MTF(Kx,Ky,A+T2)+fI1.*MTF(Kx,Ky,A+T1)).*(fI1.*MTF(Kx,Ky,A+T2)-fI2.*MTF(Kx,Ky,A+T1)))./(2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2).^2) ));
+f=sum(sum( ((fI2.*MTF(Kx,Ky,A+T1) - fI1.*MTF(Kx,Ky,A+T2)).^2) ./ (2*sigma^2*(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2)) ));
 
-df(1)= sum(sum( (Lo.*(fI2.*dMTFd1(Kx,Ky,A+T1) - fI1.*dMTFd1(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFd1(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFd1(Kx,Ky,A+T2)))) / Lo.^2 ));
-df(2)= sum(sum( (Lo.*(fI2.*dMTFd2(Kx,Ky,A+T1) - fI1.*dMTFd2(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFd2(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFd2(Kx,Ky,A+T2)))) / Lo.^2 ));
-df(3)= sum(sum( (Lo.*(fI2.*dMTFd3(Kx,Ky,A+T1) - fI1.*dMTFd3(Kx,Ky,A+T2)) - Hi.*(4*sigma^2*(MTF(Kx,Ky,A+T1).*dMTFd3(Kx,Ky,A+T1)+MTF(Kx,Ky,A+T2).*dMTFd3(Kx,Ky,A+T2)))) / Lo.^2 ));
-
+%f=sum(sum(Hi./Lo));
 end
