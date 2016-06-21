@@ -3,16 +3,20 @@ raw=load('D:\Academics\Research\Seung Research\test images\out(0,0).mat');
 raw=double(raw.out);
 %raw=(raw(:,1:1024)+raw(:,1025:2048))/2;
 raw=uint8(raw(:,1:1024));
-I1=raw;
-I2=raw;
+
 
 psf=zeros(1024,1024);
 psf(500:525,500:525)=1;
 psf=psf/sum(sum(psf));
 mtf=fft2(psf);
 
+tic;
+out=[];
+for i=1:40
+I1=raw;
+I2=raw;
 %test initial aberration
-A=[20 ];
+A=[i];
 
 %% Initialize/calculate constants
 %Calculate fft of two images
@@ -35,15 +39,15 @@ cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:c
 %[Kx,Ky] = meshgrid ([1:width]/(PixSize*width*1e-6),[1:height]/(PixSize*height*1e-6) );
 %Kx=[1:width]*(6.28/FOV);
 %Ky=[1:height]*(6.28/FOV);
-MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+%MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
 
-MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
+ MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 
 % hardcoded test aberrations (defocus only)
-T1=[10]; %defocus in [um]
-T2=[-10];
+T1=[15 ]; %defocus in [um]
+T2=[-15 ];
 
-noise=fft2(normrnd(0,sigma,height,width));
+noise=fft2(normrnd(0,sigma,height,width))+noise;
 fI1=fI1.*MTF(Kx,Ky,A+T1);
 %fI1=fI1.*mtf;
 noise=fft2(normrnd(0,sigma,height,width));
@@ -53,23 +57,26 @@ I1=(ifft2(fI1));
 I2=(ifft2(fI2));
 %I2=uint8(255*I2/max(max(I2)));
 
-close all
-figure;
-imshow([fftshift(fI1) fftshift(fI2)]);
-figure;
-imshow([I1 I2]);
+% close all
+% figure;
+% imshow([fftshift(fI1) fftshift(fI2)]);
+% figure;
+% imshow([I1 I2]);
+% 
+% fOmap=(fI1.*MTF(Kx,Ky,A+T1)+fI2.*MTF(Kx,Ky,A+T2))./(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2);
+% Omap=ifft2(fOmap);
+% Omap=uint8(255*Omap/max(max(Omap)));
+% figure;
+% imshow(Omap);
+% 
+% MAP(A,I1,I2,T1,T2,FOV,Acc);
+% checkgrad('MAP', randn(1,1), 1e-5,I1,I2,T1',T2',FOV,Acc);
 
-fOmap=(fI1.*MTF(Kx,Ky,A+T1)+fI2.*MTF(Kx,Ky,A+T2))./(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2);
-Omap=ifft2(fOmap);
-Omap=uint8(255*Omap/max(max(Omap)));
-figure;
-imshow(Omap);
-
-MAP(A,I1,I2,T1,T2,FOV,Acc);
-checkgrad('MAP', randn(1,1), 1e-5,I1,I2,T1',T2',FOV,Acc);
-
-O=minimize([0],@MAP,20,I1,I2,T1,T2,FOV,Acc);
-
+O=minimize([0],@MAP,5,I1,I2,T1,T2,FOV,Acc);
+out=[out O];
+end
+toc;
+plot(1:20,out,1:20,1:20,':');
 % set new WD/Stig from algorithm
 % z=O(1);
 % a_on=O(2);
