@@ -73,7 +73,7 @@ end
 %% Find MAP
 % initialize minimization at [0 0 0]
 %set to 5 iterations for now
-A=minimize([0 0 0],@MAP,5,I1,I2,T1,T2,FOV,AccV);
+A=minimize([0 0 0],@MAP,5,I1,I2,T1,T2,FOV,AccV,1);%last parameter sets single(1)/multiple(0) aberration modes
 
 % set new WD/Stig from algorithm
 z=A(1);
