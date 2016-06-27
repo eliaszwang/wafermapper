@@ -1,7 +1,7 @@
 function [f, df]=MAP(A,I1,I2,T1,T2,FOV,Acc,single)
 %MAP function to maximize with respect to aberration vector, A
 %T1 and T2 are the known test aberrations
-
+gaussian =1;
 %% Initialize/calculate constants
 %Calculate fft of two images
 fI1=fft2(I1); %image should have dimension 2^n for faster FFT
@@ -10,14 +10,14 @@ height=size(I1,1);
 width=size(I1,2);
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
+A_sigma=80; %sigma for gaussian prior
 %NA=5; %set NA to 5 mrad-based of paper, needs to be changed
 NA= 0.752 / (PixSize* (Acc*1000)^0.5); %confirm units for PixSize
 %sigma=10; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]);
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
 cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
-[Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
-
+[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV));
 % determine which wave vectors to use
 % Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
 % Ky=Ky([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
@@ -35,12 +35,18 @@ if single
     %for single aberration mode
     Kx2Ky2=Kx2+Ky2;
     p_A=@(A)  (max(abs(A))<=A_max)/(2*A_max); %uniform distribtion over cube of side 2*A_max
-    MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx2Ky2)*A^2);
-    dMTFdz=@(Kx,Ky,A) -0.25*(NA^2)*(Kx2Ky2)*A.*exp(-0.125*(NA^2)*(Kx2Ky2)*A^2);
+    MTF=@(Kx,Ky,A) exp(-5*(NA^2)*(Kx2Ky2)*A^2);
+    dMTFdz=@(Kx,Ky,A) -10*(NA^2)*(Kx2Ky2)*A.*exp(-5*(NA^2)*(Kx2Ky2)*A^2);
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
-    df=sum(sum( (2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2) ));
-    f=-log(p_A(A))+sum(sum( ((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)) ));
+    %df=sum(sum( (2*(fI2.*MTF1-fI1.*MTF2).*(fI2.*dMTFdz(Kx,Ky,A+T1)-fI1.*dMTFdz(Kx,Ky,A+T2)))./(2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20)-(2*(MTF1.*dMTFdz(Kx,Ky,A+T1)+MTF2.*dMTFdz(Kx,Ky,A+T2)).*(fI2.*MTF1-fI1.*MTF2).^2)./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20) ));
+    df=sum(sum( (2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20) ));
+    if gaussian
+        p_A=@(A)  (1/(2.5066*A_sigma))*exp(-A^2/(2*A_sigma^2)); %gaussian prior
+        df=df+A/A_sigma^2;
+    end
+    temp=(abs(fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20);
+    f=-log(p_A(A))+sum(sum( temp ));
 else
     %% Setup probability functions for MAPFoSt
     p_A=@(A)  (max([abs(A(1)),abs(A(2)),abs(A(3))])<=A_max)/((2*A_max)^3); %uniform distribtion over cube of side 2*A_max
