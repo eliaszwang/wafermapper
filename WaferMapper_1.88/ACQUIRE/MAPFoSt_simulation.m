@@ -1,11 +1,11 @@
 %MAPFoSt test using simulated images
 close all
 clear
-raw=load('D:\Academics\Research\Seung Research\test images\out(0,0)');
-raw=(raw.out);
-raw1=(raw(:,1:1024));
-raw2=(raw(:,1025:2048));
-raw3=raw(1:512,1:512);
+raw=load('D:\Academics\Research\Seung Research\test images\[0 0 0]');
+% raw=(raw.out);
+% raw1=(raw(:,1:1024));
+% raw2=(raw(:,1025:2048));
+% raw3=raw(1:512,1:512);
 % psf=zeros(1024,1024);
 % psf(500:525,500:525)=1;
 % psf=psf/sum(sum(psf));
@@ -15,12 +15,12 @@ raw3=raw(1:512,1:512);
 single=1;
 tic;
 out=[];
-r=1:10; %loop over different (actual) aberrations
+r=0:0.1:1; %loop over different (actual) aberrations
 for i=r
 %% Initialize/calculate constants
 %Calculate fft of two images
-fI1=fft2((raw2)); %image should have dimension 2^n for faster FFT
-fI2=fft2((raw2));
+fI1=fft2((raw.I2)); %image should have dimension 2^n for faster FFT
+fI2=fft2((raw.I2));
 height=size(fI1,1);
 width=size(fI1,2);
 FOV=8.511;
@@ -28,7 +28,7 @@ Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 NA= 0.752 / (PixSize* (Acc*1000)^0.5);
-sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
+sigma=5; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 %sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
 cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
@@ -41,7 +41,7 @@ if single
     % hardcoded test aberrations (defocus only)
     T1=15; %defocus in [um]
     T2=-15;
-    init=0;
+    init=2;
     MTF=@(Kx,Ky,A) exp(-5*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
@@ -100,7 +100,7 @@ plot(temp,fout);
 yyaxis right;
 plot(temp,dfout);
 title(['simulation -ln(P(A)) vs A for A=' num2str(A)]);
-%saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\simulation raw3 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+%saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\simulation no abs -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
 
 end
 % MSE=immse(out(1,:),out(2,:));
@@ -109,7 +109,7 @@ toc;
 
 if single
     figure;
-    plot(r,out(1,:),':',r,out(2,:));
+    plot(r,out(1,:),':',r,out(2,:),'*');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
@@ -117,17 +117,17 @@ if single
     plot(r,out(3,:),r,out(4,:))
     title('minimum values for actual and estimate');
 else
-    plot(r,(out(1,:)),r,out(4,:),':');
+    plot(r,(out(1,:)),':',r,out(4,:));
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(2,:)),r,out(5,:),':');
+    plot(r,(out(2,:)),':',r,out(5,:));
     title('estimated aon vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(3,:)),r,out(6,:),':');
+    plot(r,(out(3,:)),':',r,out(6,:));
     title('estimated adiag vs actual');
     xlabel('actual');
     ylabel('estimated');

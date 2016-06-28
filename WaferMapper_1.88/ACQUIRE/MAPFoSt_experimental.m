@@ -2,15 +2,14 @@
 close all
 clear
 raw=load('D:\Academics\Research\Seung Research\test images\[0 0 0].mat');
-focused=raw.I1;
-baseline=immse(raw.I1,raw.I2);
-disp(['Baseline MSE: ' num2str(baseline)]);
+focused=raw.I1; %focused image for reference
+focused2=raw.I2;
 single=1;
 tic;
 out=[];
 r=1:10;
 for i=r
-raw=load(['D:\Academics\Research\Seung Research\test images\[' num2str(i) ' 7 -7].mat']);
+raw=load(['D:\Academics\Research\Seung Research\test images\[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 % figure;
@@ -43,7 +42,7 @@ if single
     % hardcoded test aberrations (defocus only)
     T1=raw.T1; %defocus in [um]
     T2=raw.T2;
-    init=0;
+    init=2;
 else
     %test initial aberration
     A=[raw.A 0 0];
@@ -66,7 +65,7 @@ end
 % imshow(Omap);
 % 
 % MAP(A,I1,I2,T1,T2,FOV,Acc,single);
-% checkgrad('MAP', randn(1,1), 1e-5,I1,I2,T1',T2',FOV,Acc);
+% checkgrad('MAP', randn(1,1), 1e-5,I1,I2,T1',T2',FOV,Acc,single);
 
 % fOmap=(fI1.*MTF(Kx,Ky,A+T1)+fI2.*MTF(Kx,Ky,A+T2))./(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2);
 % Omap=ifft2(fOmap);
@@ -85,7 +84,7 @@ out=[out [A';O';MAP(A,I1,I2,T1,T2,FOV,Acc,single);MAP(O,I1,I2,T1,T2,FOV,Acc,sing
 %plot 1-D MAP
 fout=[];
 dfout=[];
-temp=-0:20;
+temp=-10:20;
 for j=temp
     [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,1);
     fout=[fout f ];
@@ -96,7 +95,7 @@ plot(temp,fout);
 yyaxis right;
 plot(temp,dfout);
 title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
-%saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+%saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental no abs 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
 end
 toc;
 
