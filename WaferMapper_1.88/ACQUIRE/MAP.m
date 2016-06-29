@@ -1,7 +1,7 @@
 function [f, df]=MAP(A,I1,I2,T1,T2,FOV,Acc,single)
 %MAP function to maximize with respect to aberration vector, A
 %T1 and T2 are the known test aberrations
-gaussian =1;
+gaussian =0;
 %% Initialize/calculate constants
 %Calculate fft of two images
 fI1=fft2(I1); %image should have dimension 2^n for faster FFT
@@ -39,21 +39,22 @@ if single
     dMTFdz=@(Kx,Ky,A) -10*(NA^2)*(Kx2Ky2)*A.*exp(-5*(NA^2)*(Kx2Ky2)*A^2);
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
-    temp=((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20); %this is the matrix of log likelihoods (ie the exponentiated part of eq 27)
+    likelihood=((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20); %this is the matrix of log likelihoods (ie the exponentiated part of eq 27)
     %df=sum(sum( (2*(fI2.*MTF1-fI1.*MTF2).*(fI2.*dMTFdz(Kx,Ky,A+T1)-fI1.*dMTFdz(Kx,Ky,A+T2)))./(2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20)-(2*(MTF1.*dMTFdz(Kx,Ky,A+T1)+MTF2.*dMTFdz(Kx,Ky,A+T2)).*(fI2.*MTF1-fI1.*MTF2).^2)./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20) ));
     df=(2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20) ;
-    df=sum(sum( df(temp>0) ));
+    df=sum(sum( df(likelihood>0) ));
     if gaussian
         p_A=@(A)  (1/(2.5066*A_sigma))*exp(-A^2/(2*A_sigma^2)); %gaussian prior
         df=df+A/A_sigma^2;
     end
-    f=-log(p_A(A))+sum(sum( temp(temp>0) ));
+    f=-log(p_A(A))+sum(sum( likelihood(likelihood>0) ));
 else
     %% Setup probability functions for MAPFoSt
     p_A=@(A)  (max([abs(A(1)),abs(A(2)),abs(A(3))])<=A_max)/((2*A_max)^3); %uniform distribtion over cube of side 2*A_max
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx2 - Ky2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx2+Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
+    likelihood=((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20); %this is the matrix of log likelihoods (ie the exponentiated part of eq 27)
     %MTF equation used to calculate partial derivatives in Wolfram
     %exp(-0.125*(N^2)*(2a*(x^2-y^2)*z-b*x*y*z+(x^2+y^2)(a^2+b^2+z^2)))
     dMTFd1=@(Kx,Ky,A) -0.125*(NA^2)*(2*A(2)*(Kx2 - Ky2) + 2*A(1)*(Kx2 + Ky2) - A(3)*Kx.*Ky).*exp(-0.125*(NA^2)*(2*A(2)*(Kx2 - Ky2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx2+Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
@@ -62,10 +63,13 @@ else
 
     % d/dx (a*f(x+i)-b*f(x+j))^2/(c*(f(x+i)^2+f(x+j)^2))
     % d/dx (((a+c*i)*f(x+g)-(b+d*i)*f(x+h))^2)/(s*(f(x+g)^2+f(x+h)^2))
-    df(1)= sum(sum( (2*(MTF1.*dMTFd1(Kx,Ky,A+T2)-MTF2.*dMTFd1(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2) ));
-    df(2)= sum(sum( (2*(MTF1.*dMTFd2(Kx,Ky,A+T2)-MTF2.*dMTFd2(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2) ));
-    df(3)= sum(sum( (2*(MTF1.*dMTFd3(Kx,Ky,A+T2)-MTF2.*dMTFd3(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2) ));
-    f=-log(p_A(A))+sum(sum( ((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)) ));
+    temp=(2*(MTF1.*dMTFd1(Kx,Ky,A+T2)-MTF2.*dMTFd1(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20);
+    df(1)= sum(sum( temp(likelihood>0) ));
+    temp=(2*(MTF1.*dMTFd2(Kx,Ky,A+T2)-MTF2.*dMTFd2(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20);
+    df(2)= sum(sum( temp(likelihood>0) ));
+    temp=(2*(MTF1.*dMTFd3(Kx,Ky,A+T2)-MTF2.*dMTFd3(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20);
+    df(3)= sum(sum( temp(likelihood>0) ));
+    f=-log(p_A(A))+sum(sum( likelihood(likelihood>0) ));
     %f=sum(sum( ((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)) ));
 end
 end

@@ -189,3 +189,28 @@ end
 %     f=-log(p_A(A))+sum(sum( ((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)) ));
 %     %f=sum(sum( ((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF1.^2+MTF2.^2)) ));
 % end
+
+
+%%
+clear;
+v=VideoWriter('D:\Academics\Research\Seung Research\test.avi');
+v.FrameRate=1;
+open(v);
+x=0:40;
+for i=x
+raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 7 -7].mat']);
+FOV=8.511;
+I1=double(raw.I1);
+I2=double(raw.I2);
+fI1=fftshift(fft2(I1)); %image should have dimension 2^n for faster FFT
+fI2=fftshift(fft2(I2));
+height=size(fI1,1);
+width=size(fI1,2);
+[Kx, Ky]=meshgrid(([0:width-1]/width-0.5)*(6.28/FOV),([0:height-1]/height-0.5)*(6.28/FOV)); %units are rad/um?
+r=abs(-0.125*1.2795^2*(Kx.^2+Ky.^2).*(2*raw.A*(raw.T1-raw.T2)+raw.T1^2-raw.T2^2));
+l=abs(log(fI1./fI2));
+%imshow(l/max(l(:)));
+imshow(l);
+writeVideo(v,frame2im(getframe(gcf)));
+end
+close(v);
