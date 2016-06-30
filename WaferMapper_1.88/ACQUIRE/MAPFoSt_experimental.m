@@ -1,15 +1,15 @@
 %MAPFoSt test using real images
 close all
 clear
-raw=load('D:\Academics\Research\Seung Research\test images\[0 0 0].mat');
+raw=load('D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_22_16\[0 0 0]');
 focused=raw.I1; %focused image for reference
 focused2=raw.I2;
 single=1;
 tic;
 out=[];
-r=1:10;
+r=0:40;
 for i=r
-raw=load(['D:\Academics\Research\Seung Research\test images\[' num2str(i) ' 15 -15].mat']);
+raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 7 -7].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 % figure;
@@ -29,8 +29,8 @@ Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 NA= 0.752 / (PixSize* (Acc*1000)^0.5);
-sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
-%sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
+%sigmaU=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
+sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
 cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); %units are rad/um?
@@ -74,52 +74,55 @@ end
 % imshow(Omap);
 % disp(['MSE ' num2str(A) ': ' num2str(immse(Omap,focused))]);
 
-p.length=10;
+p.length=20;
 p.method='BFGS';
 p.verbosity=0;
 p.MFEPLS = 10;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
-O=minimize(init,@MAP,p,I1,I2,T1,T2,FOV,Acc,single);
-out=[out [A';O';MAP(A,I1,I2,T1,T2,FOV,Acc,single);MAP(O,I1,I2,T1,T2,FOV,Acc,single)]];
-%plot 1-D MAP
-fout=[];
-dfout=[];
-temp=-10:20;
-for j=temp
-    [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,1);
-    fout=[fout f ];
-    dfout=[dfout df];
-end
-h=figure;
-plot(temp,fout);
-yyaxis right;
-plot(temp,dfout);
-title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
-%saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental no abs 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+O=minimize(init,@MAP,p,fI1,fI2,T1,T2,FOV,Acc,sigma,Kx,Ky,single);
+out=[out [A';O';MAP(A,fI1,fI2,T1,T2,FOV,Acc,sigma,Kx,Ky,single);MAP(O,I1,I2,T1,T2,FOV,Acc,sigma,Kx,Ky,single)]];
+% if single
+%     % plot 1-D MAP
+%     fout=[];
+%     dfout=[];
+%     temp=-10:20;
+%     for j=temp
+%         [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,single);
+%         fout=[fout f ];
+%         dfout=[dfout df];
+%     end
+%     h=figure;
+%     plot(temp,fout);
+%     yyaxis right;
+%     plot(temp,dfout);
+%     title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
+%     saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+% end
 end
 toc;
 
 if single
+    ind=(out(3,:)-out(4,:)>0);
     figure;
-    plot(r,out(1,:),':',r,out(2,:));
+    plot(r(ind),out(1,ind),':',r(ind),out(2,ind),'*');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,out(3,:),r,out(4,:))
+    plot(r,out(3,:),r,out(4,:),'*')
     title('minimum values for actual and estimate');
 else
-    plot(r,(out(1,:)),':',r,out(4,:));
+    plot(r,(out(1,:)),':',r,out(4,:),'*');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(2,:)),':',r,out(5,:));
+    plot(r,(out(2,:)),':',r,out(5,:),'*');
     title('estimated aon vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(3,:)),':',r,out(6,:));
+    plot(r,(out(3,:)),':',r,out(6,:),'*');
     title('estimated adiag vs actual');
     xlabel('actual');
     ylabel('estimated');
