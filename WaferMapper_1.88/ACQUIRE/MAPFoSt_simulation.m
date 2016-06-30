@@ -43,7 +43,7 @@ if single
     % hardcoded test aberrations (defocus only)
     T1=15; %defocus in [um]
     T2=-15;
-    init=2;
+    init=0;
     MTF=@(Kx,Ky,A) exp(-5*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration

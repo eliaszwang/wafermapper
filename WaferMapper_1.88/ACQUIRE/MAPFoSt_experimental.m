@@ -7,9 +7,9 @@ focused2=raw.I2;
 single=1;
 tic;
 out=[];
-r=0:40;
+r=0:80;
 for i=r
-raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 7 -7].mat']);
+raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 % figure;
@@ -29,7 +29,7 @@ Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 NA= 0.752 / (PixSize* (Acc*1000)^0.5);
-%sigmaU=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
+%sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
 cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
@@ -79,8 +79,8 @@ p.method='BFGS';
 p.verbosity=0;
 p.MFEPLS = 10;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
-O=minimize(init,@MAP,p,fI1,fI2,T1,T2,FOV,Acc,sigma,Kx,Ky,single);
-out=[out [A';O';MAP(A,fI1,fI2,T1,T2,FOV,Acc,sigma,Kx,Ky,single);MAP(O,I1,I2,T1,T2,FOV,Acc,sigma,Kx,Ky,single)]];
+O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 % if single
 %     % plot 1-D MAP
 %     fout=[];
@@ -102,9 +102,10 @@ end
 toc;
 
 if single
-    ind=(out(3,:)-out(4,:)>0);
+    ind=(out(3,:)-out(4,:)>=0);
+    ind2=(out(3,:)-out(4,:)<0);
     figure;
-    plot(r(ind),out(1,ind),':',r(ind),out(2,ind),'*');
+    plot(r(ind),out(1,ind),':',r(ind),out(2,ind),'*',r(ind2),out(2,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
