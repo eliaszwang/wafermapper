@@ -34,13 +34,13 @@ if single %for single aberration mode
     Ky2=Ky.^2;
     Kx2Ky2=Kx2+Ky2;
     p_A=@(A)  (max(abs(A))<=A_max)/(2*A_max); %uniform distribtion over cube of side 2*A_max
-    MTF=@(Kx,Ky,A) exp(-5*(NA2)*(Kx2Ky2)*A^2);
+    MTF=@(Kx,Ky,A) exp(-0.125*(NA2)*(Kx2Ky2)*A^2);
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
     MTF12=MTF1.^2;
     MTF22=MTF2.^2;
     likelihood=((fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF12+MTF22)+1e-20); %this is the matrix of log likelihoods (ie the exponentiated part of eq 27)
-    dMTFdz=@(Kx,Ky,A) -10*(NA2)*(Kx2Ky2)*A.*exp(-5*(NA2)*(Kx2Ky2)*A^2);
+    dMTFdz=@(Kx,Ky,A) -0.25*(NA2)*(Kx2Ky2)*A.*exp(-0.125*(NA2)*(Kx2Ky2)*A^2);
     %df=sum(sum( (2*(fI2.*MTF1-fI1.*MTF2).*(fI2.*dMTFdz(Kx,Ky,A+T1)-fI1.*dMTFdz(Kx,Ky,A+T2)))./(2*sigma^2*(MTF1.^2+MTF2.^2)+1e-20)-(2*(MTF1.*dMTFdz(Kx,Ky,A+T1)+MTF2.*dMTFdz(Kx,Ky,A+T2)).*(fI2.*MTF1-fI1.*MTF2).^2)./(2*sigma^2*(MTF1.^2+MTF2.^2).^2+1e-20) ));
     df=(2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF12+MTF22).^2+1e-20) ;
     df=sum(sum( df(likelihood>0) )); %only take the df terms from the ones we're using to calculate f

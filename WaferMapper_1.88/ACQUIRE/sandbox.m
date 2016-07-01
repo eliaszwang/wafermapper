@@ -193,12 +193,13 @@ end
 
 %%
 clear;
-v=VideoWriter('D:\Academics\Research\Seung Research\test.avi');
-v.FrameRate=1;
-open(v);
+%v=VideoWriter('D:\Academics\Research\Seung Research\test.avi');
+%v.FrameRate=1;
+%open(v);
 x=0:40;
+p_out=[];
 for i=x
-raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 7 -7].mat']);
+raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 15 -15].mat']);
 FOV=8.511;
 I1=double(raw.I1);
 I2=double(raw.I2);
@@ -211,6 +212,32 @@ r=abs(-0.125*1.2795^2*(Kx.^2+Ky.^2).*(2*raw.A*(raw.T1-raw.T2)+raw.T1^2-raw.T2^2)
 l=abs(log(fI1./fI2));
 %imshow(l/max(l(:)));
 imshow(l);
-writeVideo(v,frame2im(getframe(gcf)));
+%writeVideo(v,frame2im(getframe(gcf)));
+diag=medfilt1(l(1:1025:1024*1024),20);
+thresh=median(diag);
+m=min(diag(400:600));
+m_ind=round(median(find(diag==m)));
+lower=find(diag(1:m_ind)>thresh,1,'last');
+upper=m_ind+find(diag(m_ind:1024)>thresh,1);
+p=polyfit(1:(upper-lower+1),diag(lower:upper),2);
+ind=1:(upper-lower+1);
+plot(ind,diag(lower:upper),ind,p(1)*ind.^2+p(2)*ind+p(3));
+
+p_out=[p_out p(1)];
 end
-close(v);
+%close(v);
+err=(abs(out(1,:)-out(2,:)));
+plot(x,err,'+',x(1:length(x)-1),diff(p_out)<0,'*');
+good=diff(p_out)>=0;
+bad=diff(p_out)<0;
+ind=x(1:length(x)-1);
+plot(ind(good),out(1,good),':',ind(good),out(2,good),'*',ind(bad),out(2,bad),'+');
+
+
+angle=200*pi/180;
+R=[cos(angle) -sin(angle); sin(angle) cos(angle)];
+z=R*[1:10;zeros(1,10)];
+plot(1:10,z(1,:),1:10,z(2,:));
+z=R*[zeros(1,10);1:10];
+figure;
+plot(1:10,z(1,:),1:10,z(2,:));

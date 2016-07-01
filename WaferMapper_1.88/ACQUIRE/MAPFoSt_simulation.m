@@ -15,7 +15,7 @@ raw=load('D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6
 single=0;
 tic;
 out=[];
-r=1:10; %loop over different (actual) aberrations
+r=0:20; %loop over different (actual) aberrations
 for i=r
 %% Initialize/calculate constants
 I1=raw.I1;
@@ -47,11 +47,11 @@ if single
     MTF=@(Kx,Ky,A) exp(-5*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
-    A=[i i/2 i/3];
+    A=[i 2 3];
     % hardcoded test aberrations (defocus only)
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
-    init=A-[1 2 3];
+    init=[0 0 0];
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
 end
 
@@ -84,27 +84,27 @@ I2=(ifft2(fI2));
 p.length=20;
 p.method='BFGS';
 p.verbosity=0;
-p.MFEPLS = 20;   % Max Func Evals Per Line Search
+p.MFEPLS = 50;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
-O=minimize(init,@MAP,p,fI1,fI2,T1,T2,FOV,Acc,sigma,Kx,Ky,single);
-out=[out [A';O';MAP(A,fI1,fI2,T1,T2,FOV,Acc,sigma,Kx,Ky,single);MAP(O,I1,I2,T1,T2,FOV,Acc,sigma,Kx,Ky,single)]];
-if single
-    %plot 1-D MAP
-    fout=[];
-    dfout=[];
-    temp=-10:10;
-    for j=temp
-        [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,single);
-        fout=[fout f ];
-        dfout=[dfout df];
-    end
-    h=figure;
-    plot(temp,fout);
-    yyaxis right;
-    plot(temp,dfout);
-    title(['simulation -ln(P(A)) vs A for A=' num2str(A)]);
-    %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\simulation no abs -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
-end
+O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
+% if single
+%     %plot 1-D MAP
+%     fout=[];
+%     dfout=[];
+%     temp=-10:10;
+%     for j=temp
+%         [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,single);
+%         fout=[fout f ];
+%         dfout=[dfout df];
+%     end
+%     h=figure;
+%     plot(temp,fout);
+%     yyaxis right;
+%     plot(temp,dfout);
+%     title(['simulation -ln(P(A)) vs A for A=' num2str(A)]);
+%     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\simulation no abs -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+% end
 
 end
 % MSE=immse(out(1,:),out(2,:));

@@ -1,4 +1,4 @@
-function d = check(f, X, e, P1, P2, P3, P4, P5, P6);
+function d = check(f, X, e, P1, P2, P3, P4, P5, P6,P7);
 
 % checkgrad checks the derivatives in a function, by comparing them to finite
 % differences approximations. The partial derivatives and the approximation

@@ -7,11 +7,14 @@ focused2=raw.I2;
 single=1;
 tic;
 out=[];
-r=0:80;
+r=0:40;
 for i=r
-raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 15 -15].mat']);
+raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 7 -7].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
+%subsample image
+I1=I1(1:2:1024,1:2:1024);
+I2=I2(1:2:1024,1:2:1024);
 % figure;
 % subplot(2,1,1);
 % imhist(I1);
@@ -28,7 +31,7 @@ FOV=8.511;
 Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
-NA= 0.752 / (PixSize* (Acc*1000)^0.5);
+NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
 %sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
@@ -77,7 +80,7 @@ end
 p.length=20;
 p.method='BFGS';
 p.verbosity=0;
-p.MFEPLS = 10;   % Max Func Evals Per Line Search
+p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
@@ -87,7 +90,7 @@ out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,N
 %     dfout=[];
 %     temp=-10:20;
 %     for j=temp
-%         [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,single);
+%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
 %         fout=[fout f ];
 %         dfout=[dfout df];
 %     end
@@ -96,7 +99,7 @@ out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,N
 %     yyaxis right;
 %     plot(temp,dfout);
 %     title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
-%     saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+%     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
 % end
 end
 toc;
@@ -105,7 +108,7 @@ if single
     ind=(out(3,:)-out(4,:)>=0);
     ind2=(out(3,:)-out(4,:)<0);
     figure;
-    plot(r(ind),out(1,ind),':',r(ind),out(2,ind),'*',r(ind2),out(2,ind2),'+');
+    plot(r,out(1,:),':',r(ind),out(2,ind),'*',r(ind2),out(2,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
