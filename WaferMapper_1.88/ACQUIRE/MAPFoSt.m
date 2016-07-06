@@ -1,22 +1,21 @@
-function [z,a_on,a_diag]=MAPFoSt(FOV,ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName)
+function [z]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV)
 % Elias Wang's implementation of MAPFoSt
 % algorithm adapted from Jonas Binding (Low-Dosage Maximum-A-Posteriori Focusing and Stigmation)
 % should replace "sm.Execute('CMD_AUTO_FOCUS_FINE')" calls
 global GuiGlobalsStruct;
 sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables in this function
 
-single=1;
+
 % hardcoded aberrations
 T1=7;
 T2=-7;
 
-
-FileName2=[strtok(FileName,'.') '2.tif'];
 PixSize = FOV/ImageHeightInPixels; % um per pixel
 Acc=5;
 NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
 
 frametime=sm.Get_ReturnTypeSingle('AP_FRAME_TIME')/1000;
+frametime=0.5;
 
 %begin MAPFoSt
 disp('Beginning MAPFoSt...');
@@ -24,16 +23,16 @@ CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
 disp(['starting WD: ' num2str(10^6*CurrentWorkingDistance) 'um']);
 
 
-%*** START: This sequence is designed to release the SEM from Fibics control
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    sm.Execute('CMD_ABORT_AUTO');
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
-    
-    pause(0.1);
+% %*** START: This sequence is designed to release the SEM from Fibics control
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     sm.Execute('CMD_ABORT_AUTO');
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+%     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
+%     
+%     pause(0.1);
    
 
 %%Take first image
@@ -62,17 +61,19 @@ while ~IsReadOK
     end
 end
 
-%*** START: This sequence is designed to release the SEM from Fibics control
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    sm.Execute('CMD_ABORT_AUTO');
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
-    
-    pause(0.1);
-    
+delete(FileName);
+
+% %*** START: This sequence is designed to release the SEM from Fibics control
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     sm.Execute('CMD_ABORT_AUTO');
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+%     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
+%     
+%     pause(0.1);
+%     
 
 
 %%Take second image
@@ -84,7 +85,7 @@ T2WD=sm.Get_ReturnTypeSingle('AP_WD');
 disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
 sm.Fibics_WriteFOV(FOV);
 %Wait for image to be acquired
-sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName2);
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
 while(sm.Fibics_IsBusy)
     pause(.01); %1
 end
@@ -94,13 +95,14 @@ IsReadOK = false;
 while ~IsReadOK
     IsReadOK = true;
     try
-        I2 = imread(FileName2);
+        I2 = imread(FileName);
     catch MyException
         IsReadOK = false;
         pause(0.1);
     end
 end
 
+delete(FileName);
 
 %*** START: This sequence is designed to release the SEM from Fibics control
     sm.Execute('CMD_AUTO_FOCUS_FINE');
@@ -118,11 +120,12 @@ end
     T2=10^6*(T2WD-CurrentWorkingDistance);
     
 %% MAPFoSt
-
+% I1=I1(1:2:1024,1:2:1024);
+% I2=I2(1:2:1024,1:2:1024);
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
-[Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
-fI1=fft2(I1); %image should have dimension 2^n for faster FFT
-fI2=fft2(I2);
+[Kx, Ky]=meshgrid((mod(0.5+[0:ImageWidthInPixels-1]/ImageWidthInPixels,1)-0.5)*(6.28/FOV),(mod(0.5+[0:ImageHeightInPixels-1]/ImageHeightInPixels,1)-0.5)*(6.28/FOV));
+fI1=fft2(double(I1)); %image should have dimension 2^n for faster FFT
+fI2=fft2(double(I2));
 init=2;
 
 
@@ -141,5 +144,5 @@ if max(abs(O))<80
     disp(['final WD: ' num2str(10^6*sm.Get_ReturnTypeSingle('AP_WD')) 'um']);
 end
 
-
+z=real(O);
 end

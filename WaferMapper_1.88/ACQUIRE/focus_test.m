@@ -3,10 +3,10 @@ sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables 
 clc;
 tic;
 single=1;
-for i=1:10
+for i=1
 % hardcoded aberrations
 if single
-    A=i;
+    A=0;
     T1=7;
     T2=-7;
 else
@@ -18,43 +18,45 @@ end
 
 
 FileName = 'E:\PNI-Images\Eli\testimages\temFoc.tif';
-FileName2 = 'E:\PNI-Images\Eli\testimages\temFoc2.tif';
 ImageHeightInPixels = 1024;
 ImageWidthInPixels = 1024;
 DwellTimeInMicroseconds = 2;
 PixSize=8; %nm/pixel
 FOV=PixSize*ImageHeightInPixels/1000;%um
 Acc=5;
-NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
+NA= sqrt(40)*0.752 / (PixSize/1000* (Acc*1000)^0.5);
 %pause duration after changing WD
 frametime=sm.Get_ReturnTypeSingle('AP_FRAME_TIME')/1000;
-%frametime=0.1;
+frametime=1;
 %%
+%Reset initial WD using AFStartingWDd from Montage Parameters -- should not be needed
+% sm.Set_PassedTypeSingle('AP_WD',GuiGlobalsStruct.MontageParameters.AFStartingWD);
+
 %autofocus (AS-AF) at beginning
-if single
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-else
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Execute('CMD_AUTO_STIG');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(.1);
-    end
-    pause(0.1);
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-end
+% if single
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% else
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+%     sm.Execute('CMD_AUTO_STIG');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(.1);
+%     end
+%     pause(0.1);
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% end
 StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
 StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
 StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
@@ -80,20 +82,16 @@ CurrentStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
 disp(['starting WD: ' num2str(10^6*CurrentWorkingDistance) 'um']);
 
 
-%Reset initial WD using AFStartingWDd from Montage Parameters -- should not be needed
-% sm.Set_PassedTypeSingle('AP_WD',GuiGlobalsStruct.MontageParameters.AFStartingWD);
-% CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
-
-%*** START: This sequence is designed to release the SEM from Fibics control
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    sm.Execute('CMD_ABORT_AUTO');
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
-    
-    pause(0.1);
+% %*** START: This sequence is designed to release the SEM from Fibics control
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     sm.Execute('CMD_ABORT_AUTO');
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+%     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
+%     
+%     pause(0.1);
    
 
 %%Take first image
@@ -130,16 +128,18 @@ while ~IsReadOK
     end
 end
 
-%*** START: This sequence is designed to release the SEM from Fibics control
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    sm.Execute('CMD_ABORT_AUTO');
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
-    
-    pause(0.1);
+delete(FileName);
+
+% %*** START: This sequence is designed to release the SEM from Fibics control
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     sm.Execute('CMD_ABORT_AUTO');
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+%     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
+%     
+%     pause(0.1);
     
 
 
@@ -160,7 +160,7 @@ T2StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
 disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
 sm.Fibics_WriteFOV(FOV);
 %Wait for image to be acquired
-sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName2);
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
 while(sm.Fibics_IsBusy)
     pause(.01); %1
 end
@@ -170,13 +170,14 @@ IsReadOK = false;
 while ~IsReadOK
     IsReadOK = true;
     try
-        I2 = imread(FileName2);
+        I2 = imread(FileName);
     catch MyException
         IsReadOK = false;
         pause(0.1);
     end
 end
 
+delete(FileName);
 
 %*** START: This sequence is designed to release the SEM from Fibics control
     sm.Execute('CMD_AUTO_FOCUS_FINE');
@@ -215,47 +216,86 @@ else
 end
 
 out=[I1 I2];
-%imshow(out);
+imshow(out);
 end
 
 %% MAPFoSt
-% 
-% sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
-% [Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
-% fI1=fft2(I1); %image should have dimension 2^n for faster FFT
-% fI2=fft2(I2);
+
+sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
+[Kx, Ky]=meshgrid((mod(0.5+[0:ImageWidthInPixels-1]/ImageWidthInPixels,1)-0.5)*(6.28/FOV),(mod(0.5+[0:ImageHeightInPixels-1]/ImageHeightInPixels,1)-0.5)*(6.28/FOV));
+fI1=fft2(double(I1)); %image should have dimension 2^n for faster FFT
+fI2=fft2(double(I2));
+if single
+    init=2;
+else
+    init=[0 0 0];
+end
+
+
+p.length=20;
+p.method='BFGS';
+p.verbosity=1;
+p.MFEPLS = 30;   % Max Func Evals Per Line Search
+p.MSR = 100;                % Max Slope Ratio default
+O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+disp(MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)-MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+
 % if single
-%     init=2;
-% else
-%     init=[0 0 0];
-% end
-% 
-% 
-% p.length=20;
-% p.method='BFGS';
-% p.verbosity=1;
-% p.MFEPLS = 30;   % Max Func Evals Per Line Search
-% p.MSR = 100;                % Max Slope Ratio default
-% O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-% 
-% %%
-% if max(abs(O))<80
-%     if single
-%         sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance-10^-6*real(O)); %change WD to testing defocus
-%         disp(['final WD: ' num2str(10^6*sm.Get_ReturnTypeSingle('AP_WD')) 'um']);
-%     else
-%         sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*real(O(1)));
-%         sm.Set_PassedTypeSingle('AP_STIG_X',ResultStigX+10^-6*real(O(2)));
-%         sm.Set_PassedTypeSingle('AP_STIG_Y',ResultStigY+10^-6*real(O(3)));
-%         disp(['final WD: ' num2str(10^6*sm.Get_ReturnTypeSingle('AP_WD')) 'um']);
-%         disp(['final StigX: ' num2str(sm.Get_ReturnTypeSingle('AP_STIG_X')) '%']);
-%         disp(['final StigY: ' num2str(sm.Get_ReturnTypeSingle('AP_STIG_Y')) '%']);
+%     % plot 1-D MAP
+%     fout=[];
+%     dfout=[];
+%     temp=-20:20;
+%     for j=temp
+%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%         fout=[fout f ];
+%         dfout=[dfout df];
 %     end
-% 
+%     h=figure;
+%     plot(temp,fout);
+%     title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
 % end
-% 
+%%
+if max(abs(O))<80
+    if single
+        sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance-10^-6*real(O)); %change WD to testing defocus
+        disp(['final WD: ' num2str(10^6*sm.Get_ReturnTypeSingle('AP_WD')) 'um']);
+    else
+        sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*real(O(1)));
+        sm.Set_PassedTypeSingle('AP_STIG_X',ResultStigX+10^-6*real(O(2)));
+        sm.Set_PassedTypeSingle('AP_STIG_Y',ResultStigY+10^-6*real(O(3)));
+        disp(['final WD: ' num2str(10^6*sm.Get_ReturnTypeSingle('AP_WD')) 'um']);
+        disp(['final StigX: ' num2str(sm.Get_ReturnTypeSingle('AP_STIG_X')) '%']);
+        disp(['final StigY: ' num2str(sm.Get_ReturnTypeSingle('AP_STIG_Y')) '%']);
+    end
+
+end
+
 
 toc;
 
+
 %clear I1 I2
 
+
+
+%% function test
+FileName = 'E:\PNI-Images\Eli\testimages\temFoc.tif';
+ImageHeightInPixels = 256;
+ImageWidthInPixels = 256;
+DwellTimeInMicroseconds = 2;
+PixSize=32; %nm/pixel
+FOV=PixSize*ImageHeightInPixels/1000;%um
+
+tic;
+z=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV);
+toc;
+%% time built in zeiss AF
+tic;
+sm.Execute('CMD_AUTO_FOCUS_FINE');
+
+pause(0.5);
+disp('Auto Focusing...');
+while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+    pause(0.02);
+end
+toc;
