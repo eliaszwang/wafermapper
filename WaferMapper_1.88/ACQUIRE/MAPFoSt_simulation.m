@@ -20,16 +20,20 @@ for i=r
 %% Initialize/calculate constants
 I1=raw.I1;
 I2=raw.I2;
+%subsample image
+I1=I1(1:4:1024,1:4:1024);
+I2=I2(1:4:1024,1:4:1024);
 %Calculate fft of two images
-fI1=fft2((I2)); %image should have dimension 2^n for faster FFT
-fI2=fft2((I2));
+fI1=fft2(double(I2)); %image should have dimension 2^n for faster FFT
+fI2=fft2(double(I2));
 height=size(fI1,1);
 width=size(fI1,2);
-FOV=8.511;
+FOV=8.511/4;
 Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
-NA= 0.752 / (PixSize* (Acc*1000)^0.5);
+%NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
+NA= 0.5596*height / ((Acc*1000)^0.5); %empirically determined constant;
 sigmaI=0; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
@@ -44,10 +48,10 @@ if single
     T1=15; %defocus in [um]
     T2=-15;
     init=0;
-    MTF=@(Kx,Ky,A) exp(-5*(NA^2)*(Kx.^2+Ky.^2)*A^2);
+    MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
-    A=[i 2 3];
+    A=[i i/2 i/3];
     % hardcoded test aberrations (defocus only)
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
@@ -80,11 +84,11 @@ I2=(ifft2(fI2));
 % imshow(Omap);
 % 
 % MAP(A,I1,I2,T1,T2,FOV,Acc,single);
-% checkgrad('MAP', randn(1,1), 1e-5,I1,I2,T1',T2',FOV,Acc,single);
+% checkgrad('MAP', randn(1,1), 1e-5,fI1,fI2,T1',T2',NA,sigma,Kx,Ky,single);
 p.length=20;
 p.method='BFGS';
 p.verbosity=0;
-p.MFEPLS = 50;   % Max Func Evals Per Line Search
+p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];

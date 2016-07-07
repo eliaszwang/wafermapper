@@ -7,19 +7,16 @@ sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables 
 
 
 % hardcoded aberrations
-T1=7;
-T2=-7;
+T1=15;
+T2=-15;
 
-PixSize = FOV/ImageHeightInPixels; % um per pixel
-Acc=5;
-NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
 
 frametime=sm.Get_ReturnTypeSingle('AP_FRAME_TIME')/1000;
-frametime=0.5;
+frametime=0.3;
 
 %begin MAPFoSt
-disp('Beginning MAPFoSt...');
 CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
+disp('Beginning MAPFoSt...');
 disp(['starting WD: ' num2str(10^6*CurrentWorkingDistance) 'um']);
 
 
@@ -38,8 +35,8 @@ disp(['starting WD: ' num2str(10^6*CurrentWorkingDistance) 'um']);
 %%Take first image
 %implement errorcheck for test aberration
 sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T1);
-pause(frametime);
 sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+pause(frametime);
 T1WD=sm.Get_ReturnTypeSingle('AP_WD');
 disp(['first image WD: ' num2str(10^6*T1WD) 'um']);
 sm.Fibics_WriteFOV(FOV);
@@ -79,8 +76,8 @@ delete(FileName);
 %%Take second image
 %implement errorcheck for test aberration
 sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T2);
-pause(frametime);
 sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+pause(frametime);
 T2WD=sm.Get_ReturnTypeSingle('AP_WD');
 disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
 sm.Fibics_WriteFOV(FOV);
@@ -120,8 +117,10 @@ delete(FileName);
     T2=10^6*(T2WD-CurrentWorkingDistance);
     
 %% MAPFoSt
-% I1=I1(1:2:1024,1:2:1024);
-% I2=I2(1:2:1024,1:2:1024);
+%PixSize = FOV/ImageHeightInPixels; % um per pixel
+Acc=5;
+%NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
+NA= 0.5596*ImageHeightInPixels / ((Acc*1000)^0.5); %empirically determined constant;
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 [Kx, Ky]=meshgrid((mod(0.5+[0:ImageWidthInPixels-1]/ImageWidthInPixels,1)-0.5)*(6.28/FOV),(mod(0.5+[0:ImageHeightInPixels-1]/ImageHeightInPixels,1)-0.5)*(6.28/FOV));
 fI1=fft2(double(I1)); %image should have dimension 2^n for faster FFT
