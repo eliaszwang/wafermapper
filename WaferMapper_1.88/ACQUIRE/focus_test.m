@@ -286,9 +286,66 @@ DwellTimeInMicroseconds = 2;
 PixSize=32; %nm/pixel
 FOV=PixSize*ImageHeightInPixels/1000;%um
 
+sm.Execute('CMD_AUTO_FOCUS_FINE');
+pause(0.5);
+while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+    pause(0.02);
+end
+focusWD1=sm.Get_ReturnTypeSingle('AP_WD');
+sm.Execute('CMD_AUTO_FOCUS_FINE');
+pause(0.5);
+while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+    pause(0.02);
+end
+focusWD2=sm.Get_ReturnTypeSingle('AP_WD');
+sm.Execute('CMD_AUTO_FOCUS_FINE');
+pause(0.5);
+while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+    pause(0.02);
+end
+focusWD3=sm.Get_ReturnTypeSingle('AP_WD');
+focusWD=median([focusWD1 focusWD2 focusWD3]);
+
+A=randi([-30 30],1,100);
+out=zeros(3,100);
+for i=1:100
+
+sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
+pause(0.5);
+
 tic;
-z=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV);
-toc;
+[z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV,3);
+time=toc;
+
+out(1,i)=10^6*focusWD;
+out(2,i)=10^6*finalWD;
+out(3,i)=A(i);
+out(4,i)=time;
+save(['F:\' mat2str(i) 'PixSize' num2str(PixSize)],'I1','I2');
+end
+
+out2=zeros(3,100);
+for i=1:100
+
+sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
+pause(0.5);
+
+tic;
+sm.Execute('CMD_AUTO_FOCUS_FINE');
+pause(0.5);
+while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+    pause(0.02);
+end
+finalWD=sm.Get_ReturnTypeSingle('AP_WD');
+time=toc;
+
+out2(1,i)=10^6*focusWD;
+out2(2,i)=10^6*finalWD;
+out2(3,i)=A(i);
+out2(4,i)=time;
+end
+
+save(['F:\' 'Precision test PixSize' num2str(PixSize)],'out','out2','FOV','A');
 %% time built in zeiss AF
 tic;
 sm.Execute('CMD_AUTO_FOCUS_FINE');
