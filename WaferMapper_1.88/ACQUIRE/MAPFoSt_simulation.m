@@ -19,10 +19,15 @@ r=0:20; %loop over different (actual) aberrations
 for i=r
 %% Initialize/calculate constants
 I1=raw.I1;
-I2=raw.I2;
+I2=raw.I1;
+% I1=filter2(fspecial('average',3),raw.I1)/255;
+% I2=filter2(fspecial('average',3),raw.I2)/255;
 %subsample image
-I1=I1(1:4:1024,1:4:1024);
-I2=I2(1:4:1024,1:4:1024);
+% I1=I1(1:4:1024,1:4:1024);
+% I2=I2(1:4:1024,1:4:1024);
+t=256;
+I1=I1(1:t,1:t);
+I2=I2(1:t,1:t);
 %Calculate fft of two images
 fI1=fft2(double(I2)); %image should have dimension 2^n for faster FFT
 fI2=fft2(double(I2));
@@ -34,7 +39,7 @@ PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 %NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
 NA= 0.5596*height / ((Acc*1000)^0.5); %empirically determined constant;
-sigmaI=0; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
+sigmaI=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
 cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
@@ -51,7 +56,7 @@ if single
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
-    A=[i i/2 i/3];
+    A=[i 0 0];
     % hardcoded test aberrations (defocus only)
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];

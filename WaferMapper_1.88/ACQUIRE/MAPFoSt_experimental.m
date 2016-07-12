@@ -13,8 +13,13 @@ raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
-I1=I1(1:2:1024,1:2:1024);
-I2=I2(1:2:1024,1:2:1024);
+% I1=I1(1:4:1024,1:4:1024);
+% I2=I2(1:4:1024,1:4:1024);
+% I1=I1(257:768,257:768);
+% I2=I2(257:768,257:768);
+t=256;
+I1=I1(1:t,1:t);
+I2=I2(1:t,1:t);
 % figure;
 % subplot(2,1,1);
 % imhist(I1);
@@ -27,11 +32,12 @@ fI1=fft2(I1); %image should have dimension 2^n for faster FFT
 fI2=fft2(I2);
 height=size(I1,1);
 width=size(I1,2);
-FOV=8.511;
+FOV=8.511/4;
 Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
-NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
+% NA= sqrt(40)*0.752 / (8.511/height* (Acc*1000)^0.5);
+NA= 0.5596*height / ((Acc*1000)^0.5);
 %sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
@@ -52,7 +58,7 @@ else
     % hardcoded test aberrations (defocus only)
     T1=[raw.T1 0 0]; %defocus in [um]
     T2=[raw.T2 0 0];
-    init=[0 0 0];
+    init=[2 2 2];
 end
 
 % close all
@@ -103,10 +109,10 @@ out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,N
 % end
 end
 toc;
-
 if single
     ind=(out(3,:)-out(4,:)>=0);
     ind2=(out(3,:)-out(4,:)<0);
+    disp(num2str(immse(out(1,ind),out(2,ind))));
     figure;
     plot(r,out(1,:),':',r(ind),out(2,ind),'*',r(ind2),out(2,ind2),'+');
     title('estimated defocus vs actual');
@@ -130,6 +136,9 @@ else
     title('estimated adiag vs actual');
     xlabel('actual');
     ylabel('estimated');
+    figure;
+    plot(r,out(7,:),':',r,out(8,:),'*')
+    title('minimum values for actual and estimate');
 end
 % set new WD/Stig from algorithm
 % z=O(1);
