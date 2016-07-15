@@ -280,11 +280,11 @@ toc;
 
 %% function test
 FileName = 'E:\PNI-Images\Eli\testimages\temFoc.tif';
-ImageHeightInPixels = 256;
-ImageWidthInPixels = 256;
+ImageHeightInPixels = 128;
+ImageWidthInPixels = 128;
 DwellTimeInMicroseconds = 2;
-PixSize=32; %nm/pixel
-FOV=PixSize*ImageHeightInPixels/1000;%um
+PixSize=64; %nm/pixel
+FOV=PixSize*ImageHeightInPixels/1000; %um
 
 sm.Execute('CMD_AUTO_FOCUS_FINE');
 pause(0.5);
@@ -306,8 +306,8 @@ end
 focusWD3=sm.Get_ReturnTypeSingle('AP_WD');
 focusWD=median([focusWD1 focusWD2 focusWD3]);
 
-A=randi([-30 30],1,100);
-out=zeros(3,100);
+A=randi([-30 30],1,100); %generate sequence of initial aberrations
+out=zeros(4,100);
 for i=1:100
 
 sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
@@ -321,29 +321,29 @@ out(1,i)=10^6*focusWD;
 out(2,i)=10^6*finalWD;
 out(3,i)=A(i);
 out(4,i)=time;
-save(['F:\' mat2str(i) 'PixSize' num2str(PixSize)],'I1','I2');
+save(['F:\' 'Precision test (' mat2str(i) ')PixSize' num2str(PixSize)],'I1','I2');
 end
 
-out2=zeros(3,100);
-for i=1:100
-
-sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
-pause(0.5);
-
-tic;
-sm.Execute('CMD_AUTO_FOCUS_FINE');
-pause(0.5);
-while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-    pause(0.02);
-end
-finalWD=sm.Get_ReturnTypeSingle('AP_WD');
-time=toc;
-
-out2(1,i)=10^6*focusWD;
-out2(2,i)=10^6*finalWD;
-out2(3,i)=A(i);
-out2(4,i)=time;
-end
+out2=zeros(4,100);
+% for i=1:100
+% 
+% sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
+% pause(0.5);
+% 
+% tic;
+% sm.Execute('CMD_AUTO_FOCUS_FINE');
+% pause(0.5);
+% while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%     pause(0.02);
+% end
+% finalWD=sm.Get_ReturnTypeSingle('AP_WD');
+% time=toc;
+% 
+% out2(1,i)=10^6*focusWD;
+% out2(2,i)=10^6*finalWD;
+% out2(3,i)=A(i);
+% out2(4,i)=time;
+% end
 
 save(['F:\' 'Precision test PixSize' num2str(PixSize)],'out','out2','FOV','A');
 %% time built in zeiss AF

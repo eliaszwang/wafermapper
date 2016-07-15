@@ -1,25 +1,27 @@
 %MAPFoSt test using real images
 close all
 clear
-raw=load('D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_22_16\[0 0 0]');
+raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
 focused2=raw.I2;
 single=1;
 tic;
 out=[];
-r=0:40;
+r=1:50;
 for i=r
-raw=load(['D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_28_16\[' num2str(i) ' 7 -7].mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
-% I1=I1(1:4:1024,1:4:1024);
-% I2=I2(1:4:1024,1:4:1024);
+I1=I1(1:8:1024,1:8:1024);
+I2=I2(1:8:1024,1:8:1024);
 % I1=I1(257:768,257:768);
 % I2=I2(257:768,257:768);
-t=256;
-I1=I1(1:t,1:t);
-I2=I2(1:t,1:t);
+% I1=I1(385:640,385:640);
+% I2=I2(385:640,385:640);
+% t=256;
+% I1=I1(1:t,1:t);
+% I2=I2(1:t,1:t);
 % figure;
 % subplot(2,1,1);
 % imhist(I1);
@@ -32,16 +34,13 @@ fI1=fft2(I1); %image should have dimension 2^n for faster FFT
 fI2=fft2(I2);
 height=size(I1,1);
 width=size(I1,2);
-FOV=8.511/4;
+FOV=8.511;
 Acc=5;
 PixSize = FOV/height; % um per pixel
-A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 % NA= sqrt(40)*0.752 / (8.511/height* (Acc*1000)^0.5);
 NA= 0.5596*height / ((Acc*1000)^0.5);
-%sigma=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
+%sigma=5; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
-cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
-cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); %units are rad/um?
 [Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
 
@@ -58,7 +57,7 @@ else
     % hardcoded test aberrations (defocus only)
     T1=[raw.T1 0 0]; %defocus in [um]
     T2=[raw.T2 0 0];
-    init=[2 2 2];
+    init=A;
 end
 
 % close all
@@ -73,8 +72,8 @@ end
 % figure;
 % imshow(Omap);
 % 
-% MAP(A,I1,I2,T1,T2,FOV,Acc,single);
-% checkgrad('MAP', randn(1,1), 1e-5,I1,I2,T1',T2',FOV,Acc,single);
+% MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx, Ky,single);
+% checkgrad('MAP', randn(1,1), 1e-5,fI1,fI2,T1',T2',NA,sigma,Kx,Ky,single);
 
 % fOmap=(fI1.*MTF(Kx,Ky,A+T1)+fI2.*MTF(Kx,Ky,A+T2))./(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2);
 % Omap=ifft2(fOmap);
@@ -122,17 +121,19 @@ if single
     plot(r,out(3,:),r,out(4,:),'*')
     title('minimum values for actual and estimate');
 else
-    plot(r,(out(1,:)),':',r,out(4,:),'*');
+    ind=(out(7,:)-out(8,:)>=0);
+    ind2=(out(7,:)-out(8,:)<0);
+    plot(r,(out(1,:)),':',r(ind),out(4,ind),'*',r(ind2),out(4,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(2,:)),':',r,out(5,:),'*');
+    plot(r,(out(2,:)),':',r(ind),out(5,ind),'*',r(ind2),out(5,ind2),'+');
     title('estimated aon vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(3,:)),':',r,out(6,:),'*');
+    plot(r,(out(3,:)),':',r(ind),out(6,ind),'*',r(ind2),out(6,ind2),'+');
     title('estimated adiag vs actual');
     xlabel('actual');
     ylabel('estimated');
@@ -140,7 +141,3 @@ else
     plot(r,out(7,:),':',r,out(8,:),'*')
     title('minimum values for actual and estimate');
 end
-% set new WD/Stig from algorithm
-% z=O(1);
-% a_on=O(2);
-% a_diag=O(3);

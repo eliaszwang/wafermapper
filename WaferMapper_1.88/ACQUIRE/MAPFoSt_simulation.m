@@ -1,7 +1,7 @@
 %MAPFoSt test using simulated images
 close all
 clear
-raw=load('D:\Academics\Research\Seung Research\MAPFoSt-test-images\test images 6_22_16\[0 0 0]');
+raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 % raw=(raw.out);
 % raw1=(raw(:,1:1024));
 % raw2=(raw(:,1025:2048));
@@ -23,17 +23,17 @@ I2=raw.I1;
 % I1=filter2(fspecial('average',3),raw.I1)/255;
 % I2=filter2(fspecial('average',3),raw.I2)/255;
 %subsample image
-% I1=I1(1:4:1024,1:4:1024);
-% I2=I2(1:4:1024,1:4:1024);
-t=256;
-I1=I1(1:t,1:t);
-I2=I2(1:t,1:t);
+I1=I1(1:8:1024,1:8:1024);
+I2=I2(1:8:1024,1:8:1024);
+% t=256;
+% I1=I1(1:t,1:t);
+% I2=I2(1:t,1:t);
 %Calculate fft of two images
 fI1=fft2(double(I2)); %image should have dimension 2^n for faster FFT
 fI2=fft2(double(I2));
 height=size(fI1,1);
 width=size(fI1,2);
-FOV=8.511/4;
+FOV=8.511;
 Acc=5;
 PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
@@ -41,8 +41,6 @@ A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be c
 NA= 0.5596*height / ((Acc*1000)^0.5); %empirically determined constant;
 sigmaI=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
-cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
-cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); %units are rad/um?
 [Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:height-1]/height,height/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
 
@@ -52,15 +50,15 @@ if single
     % hardcoded test aberrations (defocus only)
     T1=15; %defocus in [um]
     T2=-15;
-    init=0;
+    init=2;
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
-    A=[i 0 0];
+    A=[i i/2 i/3];
     % hardcoded test aberrations (defocus only)
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
-    init=[0 0 0];
+    init=[2 2 2];
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
 end
 
@@ -92,7 +90,7 @@ I2=(ifft2(fI2));
 % checkgrad('MAP', randn(1,1), 1e-5,fI1,fI2,T1',T2',NA,sigma,Kx,Ky,single);
 p.length=20;
 p.method='BFGS';
-p.verbosity=0;
+p.verbosity=1;
 p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
@@ -115,14 +113,18 @@ out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,N
 %     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\simulation no abs -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
 % end
 
+
 end
 % MSE=immse(out(1,:),out(2,:));
 % disp(['MSE: ' num2str(MSE)]);
 toc;
 
 if single
+    ind=(out(3,:)-out(4,:)>=0);
+    ind2=(out(3,:)-out(4,:)<0);
+    disp(num2str(immse(out(1,ind),out(2,ind))));
     figure;
-    plot(r,out(1,:),':',r,out(2,:),'*');
+    plot(r,out(1,:),':',r(ind),out(2,ind),'*',r(ind2),out(2,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
@@ -130,17 +132,19 @@ if single
     plot(r,out(3,:),r,out(4,:),'*')
     title('minimum values for actual and estimate');
 else
-    plot(r,(out(1,:)),':',r,out(4,:),'*');
+    ind=(out(7,:)-out(8,:)>=0);
+    ind2=(out(7,:)-out(8,:)<0);
+    plot(r,(out(1,:)),':',r(ind),out(4,ind),'*',r(ind2),out(4,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(2,:)),':',r,out(5,:),'*');
+    plot(r,(out(2,:)),':',r(ind),out(5,ind),'*',r(ind2),out(5,ind2),'+');
     title('estimated aon vs actual');
     xlabel('actual');
     ylabel('estimated');
     figure;
-    plot(r,(out(3,:)),':',r,out(6,:),'*');
+    plot(r,(out(3,:)),':',r(ind),out(6,ind),'*',r(ind2),out(6,ind2),'+');
     title('estimated adiag vs actual');
     xlabel('actual');
     ylabel('estimated');
