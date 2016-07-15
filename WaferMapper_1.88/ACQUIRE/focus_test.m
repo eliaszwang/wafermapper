@@ -283,7 +283,7 @@ FileName = 'E:\PNI-Images\Eli\testimages\temFoc.tif';
 ImageHeightInPixels = 128;
 ImageWidthInPixels = 128;
 DwellTimeInMicroseconds = 2;
-PixSize=64; %nm/pixel
+PixSize=25; %nm/pixel
 FOV=PixSize*ImageHeightInPixels/1000; %um
 
 sm.Execute('CMD_AUTO_FOCUS_FINE');
@@ -306,9 +306,9 @@ end
 focusWD3=sm.Get_ReturnTypeSingle('AP_WD');
 focusWD=median([focusWD1 focusWD2 focusWD3]);
 
-A=randi([-30 30],1,100); %generate sequence of initial aberrations
+A=randi([-20 20],1,100); %generate sequence of initial aberrations
 out=zeros(4,100);
-for i=1:100
+for i=1:50
 
 sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
 pause(0.5);
@@ -316,12 +316,15 @@ pause(0.5);
 tic;
 [z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV,3);
 time=toc;
-
+bright=sm.Get_ReturnTypeString('AP_BRIGHTNESS');
+contrast=sm.Get_ReturnTypeString('AP_CONTRAST');
+stigx=sm.Get_ReturnTypeString('AP_STIG_X');
+stigy=sm.Get_ReturnTypeString('AP_STIG_Y');
 out(1,i)=10^6*focusWD;
 out(2,i)=10^6*finalWD;
 out(3,i)=A(i);
 out(4,i)=time;
-save(['F:\' 'Precision test (' mat2str(i) ')PixSize' num2str(PixSize)],'I1','I2');
+save(['F:\' 'Precision test (' mat2str(i) ')PixSize' num2str(PixSize)],'I1','I2','bright','contrast','stigx','stigy');
 end
 
 out2=zeros(4,100);

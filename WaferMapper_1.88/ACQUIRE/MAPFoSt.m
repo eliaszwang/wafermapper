@@ -4,7 +4,6 @@ function [z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellT
 % should replace "sm.Execute('CMD_AUTO_FOCUS_FINE')" calls
 global GuiGlobalsStruct;
 sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables in this function
-finalWD=NaN;
 
 % hardcoded aberrations
 T1=15;
@@ -137,7 +136,7 @@ p.MSR = 100;     % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,1);
 
 %%
-if max(abs(O))<50
+if max(abs(O))<20 %aberration estimate too large, assume incorrect
     % set new WD/Stig from algorithm
     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance-10^-6*real(O)); %change WD to testing defocus
     finalWD=sm.Get_ReturnTypeSingle('AP_WD');
@@ -146,6 +145,12 @@ if max(abs(O))<50
 elseif maxiter>1
     [z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV,maxiter-1); 
 else
+    sm.Execute('CMD_AUTO_FOCUS_FINE');
+    pause(0.5);
+    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+        pause(0.02);
+    end
+    finalWD=sm.Get_ReturnTypeSingle('AP_WD');
     z=NaN;
 end
 
