@@ -23,8 +23,8 @@ I2=raw.I1;
 % I1=filter2(fspecial('average',3),raw.I1)/255;
 % I2=filter2(fspecial('average',3),raw.I2)/255;
 %subsample image
-I1=I1(1:8:1024,1:8:1024);
-I2=I2(1:8:1024,1:8:1024);
+I1=I1(1:4:1024,1:4:1024);
+I2=I2(1:4:1024,1:4:1024);
 % t=256;
 % I1=I1(1:t,1:t);
 % I2=I2(1:t,1:t);
@@ -54,7 +54,7 @@ if single
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
-    A=[i i/2 i/3];
+    A=[i -1 0];
     % hardcoded test aberrations (defocus only)
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
@@ -94,6 +94,8 @@ p.verbosity=1;
 p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%O=minimize([O(1) 2 2],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+O=minimize([O(1) O(2) O(3)],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 % if single
 %     %plot 1-D MAP

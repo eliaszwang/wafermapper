@@ -38,7 +38,7 @@ if single %for single aberration mode
     Kx2=Kx.^2;
     Ky2=Ky.^2;
     Kx2Ky2=Kx2+Ky2;
-    p_A=@(A)  (max(abs(A))<=A_max)/(2*A_max); %uniform distribtion over cube of side 2*A_max
+    p_A=@(A)  (max(abs(A))<=A_max)/(2*A_max); %uniform distribtion over line of length 2*A_max
     MTF=@(Kx,Ky,A) exp(-0.125*(NA2)*(Kx2Ky2)*A^2);
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
