@@ -54,7 +54,7 @@ if single
     MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(Kx.^2+Ky.^2)*A^2);
 else
     %test initial aberration
-    A=[i -1 0];
+    A=[i -2 3];
     % hardcoded test aberrations (defocus only)
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
@@ -93,9 +93,11 @@ p.method='BFGS';
 p.verbosity=1;
 p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
-O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-%O=minimize([O(1) 2 2],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-O=minimize([O(1) O(2) O(3)],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+O=real(minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+if ~single
+    O=real(minimize([(O(1)) 0 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+    O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+end
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 % if single
 %     %plot 1-D MAP

@@ -4,17 +4,17 @@ clear
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
 focused2=raw.I2;
-single=1;
+single=0;
 tic;
 out=[];
-r=1:50;
+r=1:20;
 for i=r
 raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
-I1=I1(1:8:1024,1:8:1024);
-I2=I2(1:8:1024,1:8:1024);
+I1=I1(1:4:1024,1:4:1024);
+I2=I2(1:4:1024,1:4:1024);
 % I1=I1(257:768,257:768);
 % I2=I2(257:768,257:768);
 % I1=I1(385:640,385:640);
@@ -57,7 +57,7 @@ else
     % hardcoded test aberrations (defocus only)
     T1=[raw.T1 0 0]; %defocus in [um]
     T2=[raw.T2 0 0];
-    init=A;
+    init=[raw.A 0 0];
 end
 
 % close all
@@ -87,7 +87,11 @@ p.method='BFGS';
 p.verbosity=0;
 p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
-O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+O=real(minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+if ~single
+    O=real(minimize([(O(1)) 0 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+    O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+end
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 % if single
 %     % plot 1-D MAP

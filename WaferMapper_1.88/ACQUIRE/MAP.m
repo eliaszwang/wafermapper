@@ -14,8 +14,6 @@ A_sigma=20; %sigma for gaussian prior
 NA2=NA^2;
 %sigma=10; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 %sigma =mean([std(double(I1(:))), std(double(I2(:)))]);
-cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 70% k_nyquist, cycles/pixel
-cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV));
 % determine which wave vectors to use
 % Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
@@ -29,6 +27,8 @@ cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cu
 
 
 if single %for single aberration mode
+    cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
+    cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
     % determine which wave vectors to use
     Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
     Ky=Ky([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
@@ -54,7 +54,14 @@ if single %for single aberration mode
         df=df+A/A_sigma^2;
     end
     f=-log(p_A(A))+sum(sum( likelihood(likelihood>0) ));
-else 
+else %3 modes
+%     cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
+%     cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
+%     % determine which wave vectors to use
+%     Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
+%     Ky=Ky([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
+%     fI1=fI1([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
+%     fI2=fI2([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
     %precompute some matrices
     Kx2=Kx.^2;
     Ky2=Ky.^2;
