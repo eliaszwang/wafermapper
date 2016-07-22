@@ -13,7 +13,7 @@ DwellTimeInMicroseconds = 2;
 PixSize=8; %nm/pixel
 FOV=PixSize*ImageHeightInPixels/1000;%um
 Acc=5;
-NA= 0.5596*height / ((Acc*1000)^0.5);
+%NA= 0.5596*ImageHeightInPixels / ((Acc*1000)^0.5);
 %NA= sqrt(40)*0.752 / (PixSize/1000* (Acc*1000)^0.5);
 %pause duration after changing WD
 frametime=sm.Get_ReturnTypeSingle('AP_FRAME_TIME')/1000;
@@ -32,17 +32,17 @@ else
     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
         pause(0.02);
     end
-    sm.Execute('CMD_AUTO_STIG');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(.1);
-    end
-    pause(0.1);
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
+%     sm.Execute('CMD_AUTO_STIG');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(.1);
+%     end
+%     pause(0.1);
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
 end
 StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
 StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
@@ -211,7 +211,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['F:\defocusx' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation\defocusx' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];
@@ -220,33 +220,33 @@ end
 
 %% defocusy
 %autofocus (AS-AF) at beginning
-if single
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-else
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Execute('CMD_AUTO_STIG');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(.1);
-    end
-    pause(0.1);
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-end
-StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
-StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
-StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+% if single
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% else
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% %     sm.Execute('CMD_AUTO_STIG');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(.1);
+% %     end
+% %     pause(0.1);
+% %     sm.Execute('CMD_AUTO_FOCUS_FINE');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(0.02);
+% %     end
+% end
+% StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
+% StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+% StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
 disp(['autofocus WD: ' num2str(10^6*StartingWorkingDistance) 'um']);
 pause(frametime);
 for i=-20:20
@@ -411,7 +411,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['F:\defocusy' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation\defocusy' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];
@@ -420,33 +420,33 @@ end
 
 %% stigx
 %autofocus (AS-AF) at beginning
-if single
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-else
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Execute('CMD_AUTO_STIG');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(.1);
-    end
-    pause(0.1);
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-end
-StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
-StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
-StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+% if single
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% else
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% %     sm.Execute('CMD_AUTO_STIG');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(.1);
+% %     end
+% %     pause(0.1);
+% %     sm.Execute('CMD_AUTO_FOCUS_FINE');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(0.02);
+% %     end
+% end
+% StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
+% StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+% StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
 disp(['autofocus WD: ' num2str(10^6*StartingWorkingDistance) 'um']);
 pause(frametime);
 for i=-2:0.1:2
@@ -611,7 +611,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['F:\stigx' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation\stigx' mat2str(uint8(10*Anom)) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];
@@ -621,33 +621,33 @@ end
 
 %% stigy
 %autofocus (AS-AF) at beginning
-if single
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-else
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Execute('CMD_AUTO_STIG');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(.1);
-    end
-    pause(0.1);
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-end
-StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
-StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
-StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+% if single
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% else
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% %     sm.Execute('CMD_AUTO_STIG');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(.1);
+% %     end
+% %     pause(0.1);
+% %     sm.Execute('CMD_AUTO_FOCUS_FINE');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(0.02);
+% %     end
+% end
+% StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
+% StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+% StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
 disp(['autofocus WD: ' num2str(10^6*StartingWorkingDistance) 'um']);
 pause(frametime);
 
@@ -816,7 +816,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['F:\stigy' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation\stigy' mat2str(uint8(10*Anom)) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];

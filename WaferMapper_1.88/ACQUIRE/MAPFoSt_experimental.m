@@ -1,15 +1,16 @@
 %MAPFoSt test using real images
 close all
-clear
+%clear
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
 focused2=raw.I2;
 single=0;
 tic;
 out=[];
-r=1:20;
+r=-20:20;
 for i=r
-raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigy[0 0 ' num2str(i) '][15 0 0][-15 0 0]PixSize8.mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
@@ -53,11 +54,11 @@ if single
     init=2;
 else
     %test initial aberration
-    A=[raw.A 0 0];
+    A=[raw.A ];
     % hardcoded test aberrations (defocus only)
-    T1=[raw.T1 0 0]; %defocus in [um]
-    T2=[raw.T2 0 0];
-    init=[raw.A 0 0];
+    T1=[raw.T1 ]; %defocus in [um]
+    T2=[raw.T2 ];
+    init=[2 2 2];
 end
 
 % close all
@@ -93,6 +94,7 @@ if ~single
     %O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
 end
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
+
 % if single
 %     % plot 1-D MAP
 %     fout=[];
@@ -111,6 +113,9 @@ out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,N
 %     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
 % end
 end
+% rotation from aon,adiag to x,y
+R=[-0.1140 0.0111;0.0602 0.0332];
+out(9:10,:)=R*out(5:6,:);
 toc;
 if single
     ind=(out(3,:)-out(4,:)>=0);
@@ -127,6 +132,7 @@ if single
 else
     ind=(out(7,:)-out(8,:)>=0);
     ind2=(out(7,:)-out(8,:)<0);
+    figure;
     plot(r,(out(1,:)),':',r(ind),out(4,ind),'*',r(ind2),out(4,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
@@ -144,4 +150,14 @@ else
     figure;
     plot(r,out(7,:),':',r,out(8,:),'*')
     title('minimum values for actual and estimate');
+    figure;
+    plot(r,(out(2,:)),':',r(ind),out(9,ind),'*',r(ind2),out(9,ind2),'+');
+    title('estimated ax vs actual');
+    xlabel('actual');
+    ylabel('estimated');
+    figure;
+    plot(r,(out(3,:)),':',r(ind),out(10,ind),'*',r(ind2),out(10,ind2),'+');
+    title('estimated ay vs actual');
+    xlabel('actual');
+    ylabel('estimated');
 end
