@@ -7,10 +7,11 @@ focused2=raw.I2;
 single=0;
 tic;
 out=[];
-r=-20:20;
+r=-10:10;
 for i=r
-raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
-raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigy[0 0 ' num2str(i) '][15 0 0][-15 0 0]PixSize8.mat']);
+%raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
+%raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
@@ -47,10 +48,10 @@ sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 
 if single
     %test initial aberration
-    A=raw.A;
+    A=raw.A(1);
     % hardcoded test aberrations (defocus only)
-    T1=raw.T1; %defocus in [um]
-    T2=raw.T2;
+    T1=raw.T1(1); %defocus in [um]
+    T2=raw.T2(1);
     init=2;
 else
     %test initial aberration
@@ -69,7 +70,7 @@ end
 % 
 % fOmap=(fI1.*MTF(Kx,Ky,A+T1)+fI2.*MTF(Kx,Ky,A+T2))./(MTF(Kx,Ky,A+T1).^2+MTF(Kx,Ky,A+T2).^2);
 % Omap=ifft2(fOmap);
-% Omap=uint8(255*Omap/max(max(Omap)));
+% Omap=(Omap/max(Omap(:)));
 % figure;
 % imshow(Omap);
 % 
@@ -90,32 +91,39 @@ p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
 O=real(minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
 if ~single
-    O=real(minimize([(O(1)) 0 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+    O=real(minimize([(O(1)) 2 2],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
     %O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
 end
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 
-% if single
-%     % plot 1-D MAP
-%     fout=[];
-%     dfout=[];
-%     temp=-10:20;
-%     for j=temp
-%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-%         fout=[fout f ];
-%         dfout=[dfout df];
-%     end
-%     h=figure;
-%     plot(temp,fout);
-%     yyaxis right;
-%     plot(temp,dfout);
-%     title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
-%     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
-% end
+if single
+    % plot 1-D MAP
+    fout=[];
+    dfout=[];
+    temp=-10:20;
+    for j=temp
+        [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+        fout=[fout f ];
+        dfout=[dfout df];
+    end
+    h=figure;
+    plot(temp,fout);
+    yyaxis right;
+    plot(temp,dfout);
+    title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
+    %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+else
+    %plot 2-D aon-adiag
+    fout=zeros(41,41);
+    for j=-10:0.5:10
+        for k=-10:0.5:10
+            fout(uint8(j*2+21),uint8(k*2+21))=MAP([A(1) j k],fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+        end
+    end
+    figure;
+    imagesc(real(fout));
 end
-% rotation from aon,adiag to x,y
-R=[-0.1140 0.0111;0.0602 0.0332];
-out(9:10,:)=R*out(5:6,:);
+end
 toc;
 if single
     ind=(out(3,:)-out(4,:)>=0);
@@ -130,6 +138,10 @@ if single
     plot(r,out(3,:),r,out(4,:),'*')
     title('minimum values for actual and estimate');
 else
+    % rotation from aon,adiag to x,y
+    %R=[-0.1245 0.0093;0.0584 0.0323]; %old MTF
+    R=[0.1273 0.0436;-0.0548 0.1306]; %new MTF
+    out(9:10,:)=R*out(5:6,:);
     ind=(out(7,:)-out(8,:)>=0);
     ind2=(out(7,:)-out(8,:)<0);
     figure;

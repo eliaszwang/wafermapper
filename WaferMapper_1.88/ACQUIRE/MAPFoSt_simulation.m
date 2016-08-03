@@ -31,8 +31,8 @@ I2=I2(1:4:1024,1:4:1024);
 %Calculate fft of two images
 fI1=fft2(double(I2)); %image should have dimension 2^n for faster FFT
 fI2=fft2(double(I2));
-height=size(fI1,1);
-width=size(fI1,2);
+height=size(I1,1);
+width=size(I1,2);
 FOV=8.511;
 Acc=5;
 PixSize = FOV/height; % um per pixel
@@ -59,7 +59,7 @@ else
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
     init=[2 2 2];
-    MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+    MTF=@(Kx,Ky,A) exp(-0.125*(NA^2)*(-2*A(2)*(Kx.^2 - Ky.^2)*A(1) - 4*A(3)*Kx.*Ky*A(1) + (Kx.^2+Ky.^2)*(A(2)^2 + A(3)^2 + A(1)^2)));
 end
 
 
@@ -96,7 +96,7 @@ p.MSR = 100;                % Max Slope Ratio default
 O=real(minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
 if ~single
     O=real(minimize([(O(1)) 0 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
-    O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+    %O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
 end
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 % if single
@@ -136,8 +136,14 @@ if single
     plot(r,out(3,:),r,out(4,:),'*')
     title('minimum values for actual and estimate');
 else
+    % rotation from aon,adiag to x,y
+    %R=[-0.1140 0.0111;0.0602 0.0332];
+    R=[-0.1245 0.0093;0.0584 0.0323];
+    out(9:10,:)=R*out(2:3,:);
+    out(11:12,:)=R*out(5:6,:);
     ind=(out(7,:)-out(8,:)>=0);
     ind2=(out(7,:)-out(8,:)<0);
+    figure;
     plot(r,(out(1,:)),':',r(ind),out(4,ind),'*',r(ind2),out(4,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
@@ -155,6 +161,16 @@ else
     figure;
     plot(r,out(7,:),':',r,out(8,:),'*')
     title('minimum values for actual and estimate');
+    figure;
+    plot(r,(out(9,:)),':',r(ind),out(11,ind),'*',r(ind2),out(11,ind2),'+');
+    title('estimated ax vs actual');
+    xlabel('actual');
+    ylabel('estimated');
+    figure;
+    plot(r,(out(10,:)),':',r(ind),out(12,ind),'*',r(ind2),out(12,ind2),'+');
+    title('estimated ay vs actual');
+    xlabel('actual');
+    ylabel('estimated');
 end
 % set new WD/Stig from algorithm
 % z=O(1);
