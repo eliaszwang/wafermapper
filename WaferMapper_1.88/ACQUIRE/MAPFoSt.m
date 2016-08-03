@@ -14,7 +14,12 @@ function [z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellT
 %   finalWD: vector of final WD and stigmation values set by algorithm
 %   I1,I2: two test images taken
 
-
+if ~exist('maxiter','var')
+    maxiter=1;
+end
+if ~exist('fallback','var')
+    fallback=1;
+end
 if ~exist('verbosity','var')
     verbosity=0;
 end
