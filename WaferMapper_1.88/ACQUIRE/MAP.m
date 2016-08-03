@@ -55,8 +55,8 @@ if single %for single aberration mode
     end
     f=-log(p_A(A))+sum(sum( likelihood(likelihood>0) ));
 else %3 modes
-%     cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
-%     cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
+%     cutoffx=int32(floor(0.35*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
+%     cutoffy=int32(floor(0.35*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %     % determine which wave vectors to use
 %     Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
 %     Ky=Ky([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
@@ -67,7 +67,7 @@ else %3 modes
     Ky2=Ky.^2;
     % Setup probability functions for MAPFoSt
     p_A=@(A)  (max([abs(A(1)),abs(A(2)),abs(A(3))])<=A_max)/((2*A_max)^3); %uniform distribtion over cube of side 2*A_max
-    MTF=@(Kx,Ky,A) exp(-0.125*(NA2)*(2*A(2)*(Kx2 - Ky2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx2 + Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+    MTF=@(Kx,Ky,A) exp(-0.125*(NA2)*(-2*A(2)*(Kx2 - Ky2)*A(1) - 4*A(3)*Kx.*Ky*A(1) + (Kx2 + Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
     MTF12=MTF1.^2;
@@ -81,16 +81,16 @@ else %3 modes
     Kx2=Kx.^2;
     Ky2=Ky.^2;
     Kx2Ky2=Kx2 + Ky2;
-    MTF=@(Kx,Ky,A) exp(-0.125*(NA2)*(2*A(2)*(Kx2 - Ky2)*A(1) - A(3)*Kx.*Ky*A(1) + (Kx2 + Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+    MTF=@(Kx,Ky,A) exp(-0.125*(NA2)*(-2*A(2)*(Kx2 - Ky2)*A(1) - 4*A(3)*Kx.*Ky*A(1) + (Kx2 + Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
     MTF1=MTF(Kx,Ky,A+T1);
     MTF2=MTF(Kx,Ky,A+T2);
     MTF12=MTF1.^2;
     MTF22=MTF2.^2;
     %MTF equation used to calculate partial derivatives in Wolfram
     %exp(-0.125*(N^2)*(2a*(x^2-y^2)*z-b*x*y*z+(x^2+y^2)(a^2+b^2+z^2)))
-    dMTFd1=@(Kx,Ky,A) -0.125*(NA2)*(2*A(2)*(Kx2 - Ky2) + 2*A(1)*(Kx2Ky2) - A(3)*KxKy).*exp(-0.125*(NA2)*(2*A(2)*(Kx2 - Ky2)*A(1) - A(3)*KxKy*A(1) + (Kx2Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
-    dMTFd2=@(Kx,Ky,A) -0.125*(NA2)*(2*A(2)*(Kx2Ky2) + 2*A(1)*(Kx2 - Ky2)).*exp(-0.125*(NA2)*(2*A(2)*(Kx2 - Ky2)*A(1) - A(3)*KxKy*A(1) + (Kx2Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
-    dMTFd3=@(Kx,Ky,A) -0.125*(NA2)*(2*A(3)*(Kx2Ky2) - A(1)*KxKy).*exp(-0.125*(NA2)*(2*A(2)*(Kx.^2 - Ky.^2)*A(1) - A(3)*KxKy*A(1) + (Kx2Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+    dMTFd1=@(Kx,Ky,A) -0.125*(NA2)*(-2*A(2)*(Kx2 - Ky2) + 2*A(1)*(Kx2Ky2) - 4*A(3)*KxKy).*exp(-0.125*(NA2)*(-2*A(2)*(Kx2 - Ky2)*A(1) - 4*A(3)*KxKy*A(1) + (Kx2Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+    dMTFd2=@(Kx,Ky,A) -0.125*(NA2)*(2*A(2)*(Kx2Ky2) - 2*A(1)*(Kx2 - Ky2)).*exp(-0.125*(NA2)*(-2*A(2)*(Kx2 - Ky2)*A(1) - 4*A(3)*KxKy*A(1) + (Kx2Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
+    dMTFd3=@(Kx,Ky,A) -0.125*(NA2)*(2*A(3)*(Kx2Ky2) - 4*A(1)*KxKy).*exp(-0.125*(NA2)*(-2*A(2)*(Kx.^2 - Ky.^2)*A(1) - 4*A(3)*KxKy*A(1) + (Kx2Ky2)*(A(2)^2 + A(3)^2 + A(1)^2)));
 
     % d/dx (a*f(x+i)-b*f(x+j))^2/(c*(f(x+i)^2+f(x+j)^2))
     % d/dx (((a+c*i)*f(x+g)-(b+d*i)*f(x+h))^2)/(s*(f(x+g)^2+f(x+h)^2))
