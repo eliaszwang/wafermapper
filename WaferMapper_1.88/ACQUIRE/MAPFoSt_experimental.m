@@ -4,14 +4,14 @@ close all
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
 focused2=raw.I2;
-single=0;
+single=1;
 tic;
 out=[];
-r=-10:10;
+r=1:40;
 for i=r
 %raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
-raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
-%raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
+%raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
@@ -39,8 +39,9 @@ width=size(I1,2);
 FOV=8.511;
 Acc=5;
 PixSize = FOV/height; % um per pixel
-% NA= sqrt(40)*0.752 / (8.511/height* (Acc*1000)^0.5);
-NA= 0.5596*height / ((Acc*1000)^0.5);
+%NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
+%NA= 0.5596*height / ((Acc*1000)^0.5);
+NA=0.0079*height;
 %sigma=5; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); %units are rad/um?
@@ -89,40 +90,40 @@ p.method='BFGS';
 p.verbosity=0;
 p.MFEPLS = 30;   % Max Func Evals Per Line Search
 p.MSR = 100;                % Max Slope Ratio default
-O=real(minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
+O=real(minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky));
 if ~single
     O=real(minimize([(O(1)) 2 2],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
     %O=real(minimize([O(1) O(2) 0],@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single));
 end
-out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
+out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky)]];
 
-if single
-    % plot 1-D MAP
-    fout=[];
-    dfout=[];
-    temp=-10:20;
-    for j=temp
-        [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-        fout=[fout f ];
-        dfout=[dfout df];
-    end
-    h=figure;
-    plot(temp,fout);
-    yyaxis right;
-    plot(temp,dfout);
-    title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
-    %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
-else
-    %plot 2-D aon-adiag
-    fout=zeros(41,41);
-    for j=-10:0.5:10
-        for k=-10:0.5:10
-            fout(uint8(j*2+21),uint8(k*2+21))=MAP([A(1) j k],fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-        end
-    end
-    figure;
-    imagesc(real(fout));
-end
+% if single
+%     % plot 1-D MAP
+%     fout=[];
+%     dfout=[];
+%     temp=-10:20;
+%     for j=temp
+%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%         fout=[fout f ];
+%         dfout=[dfout df];
+%     end
+%     h=figure;
+%     plot(temp,fout);
+%     yyaxis right;
+%     plot(temp,dfout);
+%     title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
+%     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+% else
+%     %plot 2-D aon-adiag
+%     fout=zeros(41,41);
+%     for j=-10:0.5:10
+%         for k=-10:0.5:10
+%             fout(uint8(j*2+21),uint8(k*2+21))=MAP([A(1) j k],fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%         end
+%     end
+%     figure;
+%     imagesc(real(fout));
+% end
 end
 toc;
 if single
