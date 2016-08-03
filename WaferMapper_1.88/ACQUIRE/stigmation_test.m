@@ -20,30 +20,30 @@ frametime=sm.Get_ReturnTypeSingle('AP_FRAME_TIME')/1000;
 frametime=1;
 %% defocusx
 %autofocus (AS-AF) at beginning
-if single
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-else
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-%     sm.Execute('CMD_AUTO_STIG');
-%     pause(0.5);
-%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-%         pause(.1);
-%     end
-%     pause(0.1);
+% if single
 %     sm.Execute('CMD_AUTO_FOCUS_FINE');
 %     pause(0.5);
 %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
 %         pause(0.02);
 %     end
-end
+% else
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% %     sm.Execute('CMD_AUTO_STIG');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(.1);
+% %     end
+% %     pause(0.1);
+% %     sm.Execute('CMD_AUTO_FOCUS_FINE');
+% %     pause(0.5);
+% %     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+% %         pause(0.02);
+% %     end
+% end
 StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
 StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
 StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
@@ -56,9 +56,11 @@ if single
     T1=15;
     T2=-15;
 else
-    A=[i 1 0]; %[um % %]
+    A=[i 0 0]; %[um % %]
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
+    T3=[7.5 0 0];
+    T4=[-7.5 0 0];
 end
 
 %%
@@ -178,6 +180,81 @@ end
 
 delete(FileName);
 
+
+%%Take third image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T3(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T3(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T3WD=sm.Get_ReturnTypeSingle('AP_WD');
+T3StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T3StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I3 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
+
+%%Take fourth image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T4(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T4(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T4WD=sm.Get_ReturnTypeSingle('AP_WD');
+T4StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T4StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I4 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
+
 %*** START: This sequence is designed to release the SEM from Fibics control
     sm.Execute('CMD_AUTO_FOCUS_FINE');
     pause(0.5);
@@ -211,7 +288,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['E:\PNI-Images\Eli\stigmation\defocusx' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation3\defocusx' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];
@@ -256,7 +333,7 @@ if single
     T1=15;
     T2=-15;
 else
-    A=[i 0 1]; %[um % %]
+    A=[i 1 1]; %[um % %]
     T1=[15 0 0]; %defocus in [um]
     T2=[-15 0 0];
 end
@@ -378,6 +455,79 @@ end
 
 delete(FileName);
 
+%%Take third image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T3(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T3(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T3WD=sm.Get_ReturnTypeSingle('AP_WD');
+T3StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T3StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I3 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
+
+%%Take fourth image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T4(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T4(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T4WD=sm.Get_ReturnTypeSingle('AP_WD');
+T4StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T4StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I4 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
 %*** START: This sequence is designed to release the SEM from Fibics control
     sm.Execute('CMD_AUTO_FOCUS_FINE');
     pause(0.5);
@@ -411,7 +561,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['E:\PNI-Images\Eli\stigmation\defocusy' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation3\defocusy' mat2str(Anom) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];
@@ -578,6 +728,79 @@ end
 
 delete(FileName);
 
+%%Take third image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T3(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T3(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T3WD=sm.Get_ReturnTypeSingle('AP_WD');
+T3StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T3StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I3 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
+
+%%Take fourth image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T4(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T4(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T4WD=sm.Get_ReturnTypeSingle('AP_WD');
+T4StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T4StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I4 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
 %*** START: This sequence is designed to release the SEM from Fibics control
     sm.Execute('CMD_AUTO_FOCUS_FINE');
     pause(0.5);
@@ -611,7 +834,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['E:\PNI-Images\Eli\stigmation\stigx' mat2str(uint8(10*Anom)) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation3\stigx' mat2str((10*Anom)) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];
@@ -783,6 +1006,79 @@ end
 
 delete(FileName);
 
+%%Take third image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T3(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T3(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T3(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T3WD=sm.Get_ReturnTypeSingle('AP_WD');
+T3StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T3StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I3 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
+
+%%Take fourth image
+%implement errorcheck for test aberration
+if single
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4);
+else
+    sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T4(1));
+    sm.Set_PassedTypeSingle('AP_STIG_X',CurrentStigX+T4(2));
+    sm.Set_PassedTypeSingle('AP_STIG_Y',CurrentStigY+T4(3));
+end
+pause(frametime);
+sm.Set_PassedTypeSingle('AP_SCANROTATION',0);
+T4WD=sm.Get_ReturnTypeSingle('AP_WD');
+T4StigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+T4StigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['second image WD: ' num2str(10^6*T2WD) 'um']);
+sm.Fibics_WriteFOV(FOV);
+%Wait for image to be acquired
+sm.Fibics_AcquireImage(ImageWidthInPixels,ImageHeightInPixels,DwellTimeInMicroseconds,FileName);
+while(sm.Fibics_IsBusy)
+    pause(.01); %1
+end
+
+%Wait for file to be written
+IsReadOK = false;
+while ~IsReadOK
+    IsReadOK = true;
+    try
+        I4 = imread(FileName);
+    catch MyException
+        IsReadOK = false;
+        pause(0.1);
+    end
+end
+
+delete(FileName);
+
 %*** START: This sequence is designed to release the SEM from Fibics control
     sm.Execute('CMD_AUTO_FOCUS_FINE');
     pause(0.5);
@@ -816,7 +1112,7 @@ else
     T2(1)=10^6*(T2WD-CurrentWorkingDistance);
     T2(2)=(T2StigX-CurrentStigX);
     T2(3)=(T2StigY-CurrentStigY);
-    save(['E:\PNI-Images\Eli\stigmation\stigy' mat2str(uint8(10*Anom)) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
+    save(['E:\PNI-Images\Eli\stigmation3\stigy' mat2str((10*Anom)) mat2str(T1nom) mat2str(T2nom) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV','StartingWorkingDistance','StartingStigX','StartingStigY');
 end
 
 % out=[I1 I2];

@@ -282,54 +282,62 @@ toc;
 
 %% function test
 FileName = 'E:\PNI-Images\Eli\testimages\temFoc.tif';
-ImageHeightInPixels = 128;
-ImageWidthInPixels = 128;
+ImageHeightInPixels = 256;
+ImageWidthInPixels = 256;
 DwellTimeInMicroseconds = 2;
-PixSize=64; %nm/pixel
+PixSize=32; %nm/pixel
 FOV=PixSize*ImageHeightInPixels/1000; %um
 
-sm.Execute('CMD_AUTO_FOCUS_FINE');
-pause(0.5);
-while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-    pause(0.02);
-end
-focusWD1=sm.Get_ReturnTypeSingle('AP_WD');
-sm.Execute('CMD_AUTO_FOCUS_FINE');
-pause(0.5);
-while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-    pause(0.02);
-end
-focusWD2=sm.Get_ReturnTypeSingle('AP_WD');
-sm.Execute('CMD_AUTO_FOCUS_FINE');
-pause(0.5);
-while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-    pause(0.02);
-end
-focusWD3=sm.Get_ReturnTypeSingle('AP_WD');
-focusWD=median([focusWD1 focusWD2 focusWD3]);
+% sm.Execute('CMD_AUTO_FOCUS_FINE');
+% pause(0.5);
+% while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%     pause(0.02);
+% end
+% focusWD1=sm.Get_ReturnTypeSingle('AP_WD');
+% sm.Execute('CMD_AUTO_FOCUS_FINE');
+% pause(0.5);
+% while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%     pause(0.02);
+% end
+% focusWD2=sm.Get_ReturnTypeSingle('AP_WD');
+% sm.Execute('CMD_AUTO_FOCUS_FINE');
+% pause(0.5);
+% while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%     pause(0.02);
+% end
+% focusWD3=sm.Get_ReturnTypeSingle('AP_WD');
+% focusWD=median([focusWD1 focusWD2 focusWD3]);
+focusWD=[sm.Get_ReturnTypeSingle('AP_WD') sm.Get_ReturnTypeSingle('AP_STIG_X') sm.Get_ReturnTypeSingle('AP_STIG_Y')];
 
-A=randi([-20 20],1,100); %generate sequence of initial aberrations
-out=zeros(4,100);
+%A=[randi([-20 20],1,50);randn(1,50);randn(1,50)]; %generate sequence of initial aberrations
+A=[randi([-20 20],1,50);zeros(1,50);zeros(1,50)];
+out=zeros(8,50);
 for i=1:50
 
-sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
+sm.Set_PassedTypeSingle('AP_WD',focusWD(1)+10^-6*A(1,i));
+sm.Set_PassedTypeSingle('AP_STIG_X',focusWD(2)+A(2,i));
+sm.Set_PassedTypeSingle('AP_STIG_Y',focusWD(3)+A(3,i));
 pause(0.5);
 
 tic;
-[z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV,3);
+[z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellTimeInMicroseconds,FileName,FOV,3,0);
 time=toc;
 bright=sm.Get_ReturnTypeString('AP_BRIGHTNESS');
 contrast=sm.Get_ReturnTypeString('AP_CONTRAST');
 stigx=sm.Get_ReturnTypeString('AP_STIG_X');
 stigy=sm.Get_ReturnTypeString('AP_STIG_Y');
-out(1,i)=10^6*focusWD;
-out(2,i)=10^6*finalWD;
-out(3,i)=A(i);
-out(4,i)=time;
-save(['F:\' 'Precision test (' mat2str(i) ')PixSize' num2str(PixSize)],'I1','I2','bright','contrast','stigx','stigy');
+out(1,i)=10^6*focusWD(1);
+out(2,i)=10^6*finalWD(1);
+out(3,i)=focusWD(2);
+out(4,i)=finalWD(2);
+out(5,i)=focusWD(2);
+out(6,i)=finalWD(2);
+out(7,i)=A(i);
+out(8,i)=time;
+save(['E:\PNI-Images\Eli\stigmation2\' 'Precision test (' mat2str(i) ')PixSize' num2str(PixSize)],'I1','I2','bright','contrast','stigx','stigy');
 end
 
-out2=zeros(4,100);
+out2=zeros(8,50);
 % for i=1:100
 % 
 % sm.Set_PassedTypeSingle('AP_WD',focusWD+10^-6*A(i));
@@ -350,7 +358,7 @@ out2=zeros(4,100);
 % out2(4,i)=time;
 % end
 
-save(['F:\' 'Precision test PixSize' num2str(PixSize)],'out','out2','FOV','A');
+save(['E:\PNI-Images\Eli\stigmation2\' 'Precision test PixSize' num2str(PixSize)],'out','out2','FOV','A');
 %% time built in zeiss AF
 tic;
 sm.Execute('CMD_AUTO_FOCUS_FINE');
