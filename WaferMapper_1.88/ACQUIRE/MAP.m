@@ -1,4 +1,4 @@
-function [f, df]=MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx, Ky,single)
+function [f, df]=MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx, Ky)
 %MAP function to maximize with respect to aberration vector, A
 %T1 and T2 are the known test aberrations
 gaussian =0;
