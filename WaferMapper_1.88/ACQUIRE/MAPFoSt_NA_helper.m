@@ -1,4 +1,7 @@
 function [MSE]=MAPFoSt_NA_helper(NA,imagepath,imagedir)
+%   Helper function used in NA calculation: determines MSE of MAPFoSt 
+%   estimation using images given in imagepath\imagedir with the specified 
+%   NA value
     r=1:length(imagedir);
     out=[];
     for i=r

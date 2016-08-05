@@ -1,5 +1,4 @@
-
-%MAPFoSt test using real images
+%Script for determining MAPFoSt NA based on experimental images
 close all
 clear
 imagepath='../../../MAPFoSt-test-images/test images 6_28_16/';

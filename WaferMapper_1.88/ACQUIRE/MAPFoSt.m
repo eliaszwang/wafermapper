@@ -8,7 +8,7 @@ function [z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellT
 %   FileName: temp filename for saved images
 %   FOV: image Field of View
 %   maxiter: max number of iterations if algorithm fails
-%   fallback: default to Zeiss autofocus after maxiter
+%   fallback: boolean, default to Zeiss autofocus after maxiter
 %   *OUTPUTS
 %   z: (relative) aberration estimate, in um
 %   finalWD: vector of final WD and stigmation values set by algorithm
@@ -40,7 +40,7 @@ CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
 CurrentStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
 CurrentStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
 if verbosity
-    disp('Beginning MAPFoSt...');
+    disp(['Beginning MAPFoSt...Max iteration: ' num2str(maxiter)]);
     disp(['starting values: ' num2str(10^6*CurrentWorkingDistance) 'um, ' num2str(CurrentStigX) '%, ' num2str(CurrentStigY) '%']);
 end
 
@@ -138,7 +138,7 @@ p.MSR = 100;     % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky);
 
 %%
-if max(abs(O))<20 % make sure aberration estimate is reasonable (ie less than 20 um)
+if max(abs(O))<20 % make sure aberration estimate is reasonable (ie less than 20 um), although MAPFoSt should be accurate up to ~30um
     % set new WD/Stig from algorithm
     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance-10^-6*real(O)); 
     finalWD=[sm.Get_ReturnTypeSingle('AP_WD') sm.Get_ReturnTypeSingle('AP_STIG_X') sm.Get_ReturnTypeSingle('AP_STIG_Y')];
@@ -152,9 +152,13 @@ else
     if fallback
         sm.Execute('CMD_AUTO_FOCUS_FINE');
         pause(0.5);
+        if verbosity
+            disp('Zeiss Auto Focusing...');
+        end
         while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
             pause(0.02);
         end
+        pause(0.1);
     end
     finalWD=[sm.Get_ReturnTypeSingle('AP_WD') sm.Get_ReturnTypeSingle('AP_STIG_X') sm.Get_ReturnTypeSingle('AP_STIG_Y')];
     if verbosity
