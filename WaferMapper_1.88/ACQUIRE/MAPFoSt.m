@@ -123,7 +123,7 @@ delete(FileName);
 NA=0.0079; %empirically determined NA, rad
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); % determine sigma for real space, approximation for shot noise
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); % use mod instead of cirshift for backwards compatibilty, rad/um
-[Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28*width/FOV),(circshift([0:height-1]/height,height/2,2)-0.5)*(6.28*height/FOV)); % calculate wave vectors, rad/um
+[Kx, Ky]=meshgrid((circshift([0:ImageWidthInPixels-1]/ImageWidthInPixels,ImageWidthInPixels/2,2)-0.5)*(6.28*ImageWidthInPixels/FOV),(circshift([0:ImageHeightInPixels-1]/ImageHeightInPixels,ImageHeightInPixels/2,2)-0.5)*(6.28*ImageHeightInPixels/FOV)); % calculate wave vectors, rad/um
 fI1=fft2(double(I1)); %image should have dimension 2^n for faster FFT
 fI2=fft2(double(I2)); 
 init=0; % note: non-zero initialization seemed to work a bit better
