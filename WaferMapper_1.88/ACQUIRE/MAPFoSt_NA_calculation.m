@@ -3,7 +3,7 @@ close all
 clear
 imagepath='../../../MAPFoSt-test-images/test images 6_28_16/';
 imagedir=dir([imagepath '[* 15 -15].mat']);
-imagedir=imagedir(1:20,1);
+imagedir=imagedir(1:30,1);
 %% initial log scale search over 4 orders of magnitude
 min_value=0.01; %initialization, NA must be within 2 orders of magnitude of this value
 tic;
@@ -66,7 +66,9 @@ ylabel('MSE');
 min_index=find(MSE==min(MSE));
 min_value=NA_range(min_index);
 
+disp(['NA: ' num2str(min_value)]);
 %{
+%plots estimation vs NA
 raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(3) ' 15 -15].mat']);
 out=[];
 tic;

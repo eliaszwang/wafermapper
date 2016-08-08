@@ -9,8 +9,8 @@ function [MSE]=MAPFoSt_NA_helper(NA,imagepath,imagedir)
         I1=double(raw.I1);
         I2=double(raw.I2);
         %subsample image
-        I1=I1(1:4:1024,1:4:1024);
-        I2=I2(1:4:1024,1:4:1024);
+        I1=I1(1:2:1024,1:2:1024);
+        I2=I2(1:2:1024,1:2:1024);
 
         %% Initialize/calculate constants
         %Calculate fft of two images
