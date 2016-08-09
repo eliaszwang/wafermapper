@@ -1,16 +1,16 @@
 %MAPFoSt test using real images
 close all
-%clear
+clear
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
 focused2=raw.I2;
 single=0;
 tic;
 out=[];
-r=-10:10;
+r=-20:20;
 for i=r
-%raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
-raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusx[' num2str(i) ' 1 0][15 0 0][-15 0 0]PixSize8.mat']);
+%raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
 %raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
@@ -40,11 +40,12 @@ FOV=8.511;
 Acc=5;
 PixSize = FOV/height; % um per pixel
 % NA= sqrt(40)*0.752 / (8.511/height* (Acc*1000)^0.5);
-NA= 0.5596*height / ((Acc*1000)^0.5);
+%NA= 0.5596*height / ((Acc*1000)^0.5);
+NA=0.0079;
 %sigma=5; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); %units are rad/um?
-[Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
+[Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28*width/FOV),(circshift([0:width-1]/width,width/2,2)-0.5)*(6.28*width/FOV)); %units are rad/um?
 
 if single
     %test initial aberration
@@ -96,33 +97,33 @@ if ~single
 end
 out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single)]];
 
-if single
-    % plot 1-D MAP
-    fout=[];
-    dfout=[];
-    temp=-10:20;
-    for j=temp
-        [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-        fout=[fout f ];
-        dfout=[dfout df];
-    end
-    h=figure;
-    plot(temp,fout);
-    yyaxis right;
-    plot(temp,dfout);
-    title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
-    %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
-else
-    %plot 2-D aon-adiag
-    fout=zeros(41,41);
-    for j=-10:0.5:10
-        for k=-10:0.5:10
-            fout(uint8(j*2+21),uint8(k*2+21))=MAP([A(1) j k],fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
-        end
-    end
-    figure;
-    imagesc(real(fout));
-end
+% if single
+%     % plot 1-D MAP
+%     fout=[];
+%     dfout=[];
+%     temp=-20:20;
+%     for j=temp
+%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%         fout=[fout f ];
+%         dfout=[dfout df];
+%     end
+%     h=figure;
+%     plot(temp,fout);
+% %     yyaxis right;
+% %     plot(temp,dfout);
+%     title(['experimental -ln(P(A)) vs A for A=' num2str(A)]);
+%     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\experimental second set 15 -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
+% else
+%     %plot 2-D aon-adiag
+%     fout=zeros(41,41);
+%     for j=-10:0.5:10
+%         for k=-10:0.5:10
+%             fout(uint8(j*2+21),uint8(k*2+21))=MAP([A(1) j k],fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%         end
+%     end
+%     figure;
+%     imagesc(real(fout));
+% end
 end
 toc;
 if single
@@ -145,31 +146,40 @@ else
     ind=(out(7,:)-out(8,:)>=0);
     ind2=(out(7,:)-out(8,:)<0);
     figure;
+    subplot(1,3,1)
     plot(r,(out(1,:)),':',r(ind),out(4,ind),'*',r(ind2),out(4,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
-    figure;
+    %figure;
+    subplot(1,3,2)
     plot(r,(out(2,:)),':',r(ind),out(5,ind),'*',r(ind2),out(5,ind2),'+');
     title('estimated aon vs actual');
     xlabel('actual');
     ylabel('estimated');
-    figure;
+    ylim([-30 30]);
+    %figure;
+    subplot(1,3,3)
     plot(r,(out(3,:)),':',r(ind),out(6,ind),'*',r(ind2),out(6,ind2),'+');
     title('estimated adiag vs actual');
     xlabel('actual');
     ylabel('estimated');
+    ylim([-30 30]);
     figure;
     plot(r,out(7,:),':',r,out(8,:),'*')
     title('minimum values for actual and estimate');
     figure;
+    subplot(1,2,1)
     plot(r,(out(2,:)),':',r(ind),out(9,ind),'*',r(ind2),out(9,ind2),'+');
     title('estimated ax vs actual');
     xlabel('actual');
     ylabel('estimated');
-    figure;
+    ylim([-2 2]);
+    %figure;
+    subplot(1,2,2)
     plot(r,(out(3,:)),':',r(ind),out(10,ind),'*',r(ind2),out(10,ind2),'+');
     title('estimated ay vs actual');
     xlabel('actual');
     ylabel('estimated');
+    ylim([-2 2]);
 end

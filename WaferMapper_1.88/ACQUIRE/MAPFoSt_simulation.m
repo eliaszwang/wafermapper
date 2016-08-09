@@ -1,6 +1,6 @@
 %MAPFoSt test using simulated images
 close all
-clear
+%clear
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 % raw=(raw.out);
 % raw1=(raw(:,1:1024));
@@ -12,10 +12,10 @@ raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 % mtf=fft2(psf);
 
 
-single=0;
+single=1;
 tic;
 out=[];
-r=0:20; %loop over different (actual) aberrations
+r=0:40; %loop over different (actual) aberrations
 for i=r
 %% Initialize/calculate constants
 I1=raw.I1;
@@ -39,7 +39,7 @@ PixSize = FOV/height; % um per pixel
 A_max=80; %set max defocus and astigmatism to 80um-based of paper, needs to be changed
 %NA= sqrt(40)*0.752 / (PixSize* (Acc*1000)^0.5);
 NA= 0.5596*height / ((Acc*1000)^0.5); %empirically determined constant;
-sigmaI=1; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
+sigmaI=5; %estimated Gaussian noise (approximation for shot noise), rad/um (maybe calculate later)
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28/FOV)); %units are rad/um?
 [Kx, Ky]=meshgrid((circshift([0:width-1]/width,width/2,2)-0.5)*(6.28/FOV),(circshift([0:height-1]/height,height/2,2)-0.5)*(6.28/FOV)); %units are rad/um?
@@ -103,16 +103,16 @@ out=[out [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);MAP(O,fI1,fI2,T1,T2,N
 %     %plot 1-D MAP
 %     fout=[];
 %     dfout=[];
-%     temp=-10:10;
+%     temp=-10:40;
 %     for j=temp
-%         [f,df]=MAP(j,I1,I2,T1,T2,FOV,Acc,single);
+%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
 %         fout=[fout f ];
 %         dfout=[dfout df];
 %     end
 %     h=figure;
 %     plot(temp,fout);
-%     yyaxis right;
-%     plot(temp,dfout);
+% %     yyaxis right;
+% %     plot(temp,dfout);
 %     title(['simulation -ln(P(A)) vs A for A=' num2str(A)]);
 %     %saveas(h,['D:\Academics\Research\Seung Research\Analysis plots\simulation no abs -ln(P(A)) vs A for A=' num2str(A) '.jpg']);
 % end

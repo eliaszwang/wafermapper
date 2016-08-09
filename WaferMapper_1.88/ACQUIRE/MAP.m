@@ -7,7 +7,7 @@ gaussian =0;
 height=size(fI1,1);
 width=size(fI1,2);
 %PixSize = FOV/height; % um per pixel
-A_max=50; %set max defocus and astigmatism to 50um
+A_max=80; %set max defocus and astigmatism to 50um
 A_sigma=20; %sigma for gaussian prior
 %NA=5; %set NA to 5 mrad-based of paper, needs to be changed
 %NA= 0.752 / (PixSize* (Acc*1000)^0.5); %confirm units for PixSize
@@ -27,8 +27,8 @@ NA2=NA^2;
 
 
 if single %for single aberration mode
-    cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
-    cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
+    cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
+    cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
     % determine which wave vectors to use
     Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
     Ky=Ky([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
