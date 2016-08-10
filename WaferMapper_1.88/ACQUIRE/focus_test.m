@@ -2,12 +2,45 @@
 global GuiGlobalsStruct;
 sm = GuiGlobalsStruct.MyCZEMAPIClass; %To shorten calls to global API variables in this function
 clc;
-tic;
 single=1;
-for i=1
+%Reset initial WD using AFStartingWDd from Montage Parameters -- should not be needed
+% sm.Set_PassedTypeSingle('AP_WD',GuiGlobalsStruct.MontageParameters.AFStartingWD);
+
+%autofocus (AS-AF) at beginning
+% if single
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% else
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+%     sm.Execute('CMD_AUTO_STIG');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(.1);
+%     end
+%     pause(0.1);
+%     sm.Execute('CMD_AUTO_FOCUS_FINE');
+%     pause(0.5);
+%     while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
+%         pause(0.02);
+%     end
+% end
+StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
+StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
+StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
+disp(['autofocus WD: ' num2str(10^6*StartingWorkingDistance) 'um']);
+pause(frametime);
+for i=1:50
+    tic;
 % hardcoded aberrations
 if single
-    A=0;
+    A=10;
     T1=15;
     T2=-15;
 else
@@ -22,48 +55,16 @@ FileName = 'E:\PNI-Images\Eli\testimages\temFoc.tif';
 ImageHeightInPixels = 1024;
 ImageWidthInPixels = 1024;
 DwellTimeInMicroseconds = 2;
-PixSize=8; %nm/pixel
+PixSize=i; %nm/pixel
 FOV=PixSize*ImageHeightInPixels/1000;%um
 Acc=5;
-NA= 0.5596*height / ((Acc*1000)^0.5);
+NA= 0.5596*ImageHeightInPixels / ((Acc*1000)^0.5);
 %NA= sqrt(40)*0.752 / (PixSize/1000* (Acc*1000)^0.5);
 %pause duration after changing WD
 frametime=sm.Get_ReturnTypeSingle('AP_FRAME_TIME')/1000;
 frametime=1;
 %%
-%Reset initial WD using AFStartingWDd from Montage Parameters -- should not be needed
-% sm.Set_PassedTypeSingle('AP_WD',GuiGlobalsStruct.MontageParameters.AFStartingWD);
 
-%autofocus (AS-AF) at beginning
-if single
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-else
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-    sm.Execute('CMD_AUTO_STIG');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(.1);
-    end
-    pause(0.1);
-    sm.Execute('CMD_AUTO_FOCUS_FINE');
-    pause(0.5);
-    while ~strcmp('Idle',sm.Get_ReturnTypeString('DP_AUTO_FUNCTION'))
-        pause(0.02);
-    end
-end
-StartingWorkingDistance=sm.Get_ReturnTypeSingle('AP_WD');
-StartingStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
-StartingStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
-disp(['autofocus WD: ' num2str(10^6*StartingWorkingDistance) 'um']);
-pause(frametime);
 %%
 %set initial aberration
 
@@ -191,7 +192,7 @@ delete(FileName);
     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance);
     
     pause(0.1);
-
+toc;
 %get actual aberrations
 if single
     Anom=A;
@@ -200,7 +201,7 @@ if single
     T1=10^6*(T1WD-CurrentWorkingDistance);
     T2nom=T2;
     T2=10^6*(T2WD-CurrentWorkingDistance);
-    %save(['F:\' mat2str(round([A T1 T2])) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV');
+    save(['Y:\research\eliwang\MAPFoSt-test-images\test images 8_9_16\FOV10\' mat2str(round([A T1 T2])) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV');
 else
     Anom=A;
     A(1)=10^6*(CurrentWorkingDistance-StartingWorkingDistance);
@@ -273,7 +274,7 @@ if max(abs(O))<80
 end
 
 
-toc;
+
 
 
 %clear I1 I2
