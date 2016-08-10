@@ -138,7 +138,7 @@ p.MSR = 100;     % Max Slope Ratio default
 O=minimize(init,@MAP,p,fI1,fI2,T1,T2,NA,sigma,Kx,Ky);
 
 %%
-if max(abs(O))<20 % make sure aberration estimate is reasonable (ie less than 20 um), although MAPFoSt should be accurate up to ~30um
+if max(abs(O))<30 % make sure aberration estimate is reasonable (ie less than 30 um), although MAPFoSt should be accurate up to ~30um
     % set new WD/Stig from algorithm
     sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance-10^-6*real(O)); 
     finalWD=[sm.Get_ReturnTypeSingle('AP_WD') sm.Get_ReturnTypeSingle('AP_STIG_X') sm.Get_ReturnTypeSingle('AP_STIG_Y')];
