@@ -9,8 +9,8 @@ tic;
 out=[];
 r=-20:20;
 for i=r
-raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusx[' num2str(i) ' 1 0][15 0 0][-15 0 0]PixSize8.mat']);
-%raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
+%raw=load(['../../../MAPFoSt-test-images/test images 7_25_16/defocusx[' num2str(i) ' 0 0][15 0 0][-15 0 0]PixSize8.mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 7_25_16/stigy[0 0 ' num2str(i) '][15 0 0][-15 0 0]PixSize8.mat']);
 %raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
@@ -56,10 +56,10 @@ if single
     init=2;
 else
     %test initial aberration
-    A=[raw.A ];
+    A=[raw.A];
     % hardcoded test aberrations (defocus only)
-    T1=[raw.T1 ]; %defocus in [um]
-    T2=[raw.T2 ];
+    T1=[raw.T1]; %defocus in [um]
+    T2=[raw.T2];
     init=[2 2 2];
 end
 
@@ -141,7 +141,7 @@ if single
 else
     % rotation from aon,adiag to x,y
     %R=[-0.1245 0.0093;0.0584 0.0323]; %old MTF
-    R=[0.1273 0.0436;-0.0548 0.1306]; %new MTF
+    R=[0.1234 0.0506;-0.0548 0.1310]; %new MTF
     out(9:10,:)=R*out(5:6,:);
     ind=(out(7,:)-out(8,:)>=0);
     ind2=(out(7,:)-out(8,:)<0);
