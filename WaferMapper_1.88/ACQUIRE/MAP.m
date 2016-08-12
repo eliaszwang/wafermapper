@@ -14,7 +14,7 @@ width=size(fI1,2);
 A_max=50; %set max defocus to 50um
 A_sigma=20; %sigma for gaussian prior
 NA2=NA^2;
-cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 25% k_nyquist, cycles/pixel
+cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
 cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %% select which wave vectors to use (based on cutoff)
 Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);

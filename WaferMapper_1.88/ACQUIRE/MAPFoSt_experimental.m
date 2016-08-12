@@ -1,5 +1,5 @@
 %MAPFoSt test using real images
-close all
+%close all
 %clear
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
@@ -18,8 +18,8 @@ raw=load(['/usr/people/eliasw/seungmount/research/eliwang/MAPFoSt-test-images/te
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
-I1=I1(1:2:1024,1:2:1024);
-I2=I2(1:2:1024,1:2:1024);
+I1=I1(1:4:1024,1:4:1024);
+I2=I2(1:4:1024,1:4:1024);
 % I1=I1(257:768,257:768);
 % I2=I2(257:768,257:768);
 % I1=I1(385:640,385:640);
@@ -132,14 +132,16 @@ if single
     ind=(output(3,:)-output(4,:)>=0);
     ind2=(output(3,:)-output(4,:)<0);
     disp(num2str(immse(output(1,ind),output(2,ind))));
-    figure;
-    plot(r,output(1,:),':',r(ind),output(2,ind),'*',r(ind2),output(2,ind2),'+');
+    %figure;
+    hold all
+    %plot(r,output(1,:),':',r(ind),output(2,ind),'*',r(ind2),output(2,ind2),'+');
+    plot(r,abs(output(1,:)-output(2,:)),'*');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
-    figure;
-    plot(r,output(3,:),r,output(4,:),'*')
-    title('minimum values for actual and estimate');
+%     figure;
+%     plot(r,output(3,:),r,output(4,:),'*')
+%     title('minimum values for actual and estimate');
 else
     % rotation from aon,adiag to x,y
     %R=[-0.1245 0.0093;0.0584 0.0323]; %old MTF

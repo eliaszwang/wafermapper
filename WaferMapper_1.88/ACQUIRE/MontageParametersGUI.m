@@ -99,6 +99,7 @@ set(handles.NoAuto_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.NoAu
 set(handles.IsSingle_AF_ForWholeMontage_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsSingle_AF_ForWholeMontage);
 set(handles.IsSingle_AFASAF_ForWholeMontage_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsSingle_AFASAF_ForWholeMontage);
 set(handles.IsAFOnEveryTile_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsAFOnEveryTile);
+set(handles.IsAFOnEveryTileMAPFoSt_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsAFOnEveryTileMAPFoSt);
 set(handles.IsAFASAFOnEveryTile_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsAFASAFOnEveryTile);
 set(handles.IsPlaneFit_radiobutton, 'Value', GuiGlobalsStruct.MontageParameters.IsPlaneFit);
 
@@ -866,6 +867,9 @@ GuiGlobalsStruct.MontageParameters.IsSingle_AFASAF_ForWholeMontage = Value;
 
 Value = get(handles.IsAFOnEveryTile_radiobutton, 'Value');
 GuiGlobalsStruct.MontageParameters.IsAFOnEveryTile = Value;
+
+Value = get(handles.IsAFOnEveryTileMAPFoSt_radiobutton, 'Value');
+GuiGlobalsStruct.MontageParameters.IsAFOnEveryTileMAPFoSt = Value;
 
 Value = get(handles.IsAFASAFOnEveryTile_radiobutton, 'Value');
 GuiGlobalsStruct.MontageParameters.IsAFASAFOnEveryTile = Value;
