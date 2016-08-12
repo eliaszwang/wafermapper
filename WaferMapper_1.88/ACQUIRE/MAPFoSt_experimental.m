@@ -1,5 +1,5 @@
 %MAPFoSt test using real images
-%close all
+close all
 %clear
 raw=load('../../../MAPFoSt-test-images/test images 6_22_16/[0 0 0].mat');
 focused=raw.I1; %focused image for reference
@@ -7,14 +7,14 @@ focused2=raw.I2;
 single=1;
 tic;
 output=[];
-r=1:50;
+r=1:4;
 for i=r
 %raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
 %raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
-%raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
+raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -15].mat']);
 % raw=load(['../../../MAPFoSt-test-images/test images 7_15_16/New Folder (3)/Precision test (' num2str(i) ')PixSize64.mat']);
 % raw2=load('/usr/people/eliasw/seungmount/research/eliwang/MAPFoSt-test-images/test images 7_15_16/New Folder (3)/Precision test PixSize64.mat');
-raw=load(['/usr/people/eliasw/seungmount/research/eliwang/MAPFoSt-test-images/test images 8_9_16/FOV/[-0 15 -15]PixSize' num2str(i) '.mat']);
+%raw=load(['/usr/people/eliasw/seungmount/research/eliwang/MAPFoSt-test-images/test images 8_9_16/FOV/[-0 15 -15]PixSize' num2str(i) '.mat']);
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
@@ -42,7 +42,7 @@ fI2=fft2(I2);
 height=size(I1,1);
 width=size(I1,2);
 FOV=8.511;
-FOV=raw.FOV;
+%FOV=raw.FOV;
 NA=0.0079; %empirically determined NA
 sigma =mean([std(double(I1(:))), std(double(I2(:)))]); %sigma for real space, approximation for shot noise
 %[Kx, Ky]=meshgrid((mod(0.5+[0:width-1]/width,1)-0.5)*(6.28*width/FOV),(mod(0.5+[0:height-1]/height,1)-0.5)*(6.28*height/FOV)); % use mod instead of cirshift for backwards compatibilty, units are rad/um
@@ -103,9 +103,9 @@ output=[output [A';O';MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky);MAP(O,fI1,fI2,T1,T2,NA
 %     % plot 1-D MAP
 %     fout=[];
 %     dfout=[];
-%     temp=-10:20;
+%     temp=A-1:0.1:A+1;
 %     for j=temp
-%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky,single);
+%         [f,df]=MAP(j,fI1,fI2,T1,T2,NA,sigma,Kx,Ky);
 %         fout=[fout f ];
 %         dfout=[dfout df];
 %     end
@@ -132,16 +132,14 @@ if single
     ind=(output(3,:)-output(4,:)>=0);
     ind2=(output(3,:)-output(4,:)<0);
     disp(num2str(immse(output(1,ind),output(2,ind))));
-    %figure;
-    hold all
-    %plot(r,output(1,:),':',r(ind),output(2,ind),'*',r(ind2),output(2,ind2),'+');
-    plot(r,abs(output(1,:)-output(2,:)),'*');
+    figure;
+    plot(r,output(1,:),':',r(ind),output(2,ind),'*',r(ind2),output(2,ind2),'+');
     title('estimated defocus vs actual');
     xlabel('actual');
     ylabel('estimated');
-%     figure;
-%     plot(r,output(3,:),r,output(4,:),'*')
-%     title('minimum values for actual and estimate');
+    figure;
+    plot(r,output(3,:),r,output(4,:),'*')
+    title('minimum values for actual and estimate');
 else
     % rotation from aon,adiag to x,y
     %R=[-0.1245 0.0093;0.0584 0.0323]; %old MTF

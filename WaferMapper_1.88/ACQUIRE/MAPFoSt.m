@@ -9,7 +9,7 @@ function [z,finalWD,I1,I2]=MAPFoSt(ImageHeightInPixels,ImageWidthInPixels,DwellT
 %   FOV: image Field of View
 %   maxiter: max number of iterations if algorithm fails
 %   fallback: boolean, default to Zeiss autofocus after maxiter
-%   *OUTPUTS
+%   *OUTPUTS:
 %   z: (relative) aberration estimate, in um
 %   finalWD: vector of final WD and stigmation values set by algorithm
 %   I1,I2: two test images taken
@@ -36,6 +36,7 @@ T2=-15;
 frametime=1; 
 
 %begin MAPFoSt
+%get starting WD and Stig
 CurrentWorkingDistance = sm.Get_ReturnTypeSingle('AP_WD');
 CurrentStigX = sm.Get_ReturnTypeSingle('AP_STIG_X');
 CurrentStigY = sm.Get_ReturnTypeSingle('AP_STIG_Y');
@@ -46,7 +47,7 @@ end
 
 
 %% Take first image
-sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T1);
+sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T1); %apply first test aberration
 pause(frametime);
 T1WD=sm.Get_ReturnTypeSingle('AP_WD');
 if verbosity
@@ -75,7 +76,7 @@ delete(FileName); % for some reason, deleting image seemed to be necessary
 
 
 %% Take second image
-sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T2);
+sm.Set_PassedTypeSingle('AP_WD',CurrentWorkingDistance+10^-6*T2); %apply second test aberration
 pause(frametime);
 T2WD=sm.Get_ReturnTypeSingle('AP_WD');
 if verbosity
