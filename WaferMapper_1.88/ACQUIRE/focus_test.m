@@ -201,7 +201,7 @@ if single
     T1=10^6*(T1WD-CurrentWorkingDistance);
     T2nom=T2;
     T2=10^6*(T2WD-CurrentWorkingDistance);
-    save(['Y:\research\eliwang\MAPFoSt-test-images\test images 8_11_16\FOV\' mat2str(round([A T1 T2])) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV');
+    save(['Y:\research\eliwang\MAPFoSt-test-images\test images 8_11_16\FOV5\' mat2str(round([A T1 T2])) 'PixSize' num2str(PixSize)],'A','T1','T2','I1','I2','Anom','T1nom','T2nom','FOV');
 else
     Anom=A;
     A(1)=10^6*(CurrentWorkingDistance-StartingWorkingDistance);

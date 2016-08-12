@@ -1,4 +1,4 @@
-function [f, df]=MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx, Ky)
+function [f, df]=MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx,Ky)
 %   MAP function to maximize with respect to aberration vector, A
 %   fI1,fI2: fft2 of the images
 %   T1, T2: known test aberrations
@@ -7,15 +7,14 @@ function [f, df]=MAP(A,fI1,fI2,T1,T2,NA,sigma,Kx, Ky)
 %   Kx,Ky: wave vector (meshgrid)
 
 gaussian =0; %gaussian prior flag
-
 %% Initialize/calculate constants
 height=size(fI1,1);
 width=size(fI1,2);
 A_max=50; %set max defocus to 50um
 A_sigma=20; %sigma for gaussian prior
 NA2=NA^2;
-cutoffx=int32(floor(0.125*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
-cutoffy=int32(floor(0.125*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
+cutoffx=int32(floor(0.25*width)); %cutoff for k's used based on 50% k_nyquist, cycles/pixel
+cutoffy=int32(floor(0.25*height)); %use for selecting subset of I/K e.g. K([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end])
 %% select which wave vectors to use (based on cutoff)
 Kx=Kx([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
 Ky=Ky([1:cutoffy end+1-cutoffy:end],[1:cutoffx end+1-cutoffx:end]);
@@ -33,14 +32,13 @@ MTF2=MTF(Kx,Ky,A+T2);
 MTF12=MTF1.^2;
 MTF22=MTF2.^2;
 
-likelihood=(abs(fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF12+MTF22)+1e-20); %this is the matrix of log likelihoods (ie the exponentiated part of eq 27)
 
 df=( (2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(real(fI2).*MTF2+real(fI1).*MTF1).*(real(fI1).*MTF2-real(fI2).*MTF1)) + (2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(imag(fI2).*MTF2+imag(fI1).*MTF1).*(imag(fI1).*MTF2-imag(fI2).*MTF1)) )./(2*sigma^2*(MTF12+MTF22).^2+1e-20) ;
-%df=(2*(MTF1.*dMTFdz(Kx,Ky,A+T2)-MTF2.*dMTFdz(Kx,Ky,A+T1)).*(fI2.*MTF2+fI1.*MTF1).*(fI1.*MTF2-fI2.*MTF1))./(2*sigma^2*(MTF12+MTF22).^2+1e-20) ;
-df=sum(sum( df )); %only take the df terms from the ones we're using to calculate f
+df=sum(sum( df )); 
 if gaussian
     p_A=@(A)  (1/(2.5066*A_sigma))*exp(-A^2/(2*A_sigma^2)); % define gaussian prior
     df=df+A/A_sigma^2;
 end
-f=-log(p_A(A))+sum(sum( likelihood )); %take positive log likelihoods
+f=-log(p_A(A))+sum(sum( (abs(fI2.*MTF1 - fI1.*MTF2).^2) ./ (2*sigma^2*(MTF12+MTF22)+1e-20) )); %take sum log likelihoods
+
 end

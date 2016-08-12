@@ -7,7 +7,7 @@ focused2=raw.I2;
 single=1;
 tic;
 output=[];
-r=1:4;
+r=1:30;
 for i=r
 %raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/defocusy[' num2str(i) ' 0 1][15 0 0][-15 0 0]PixSize8.mat']);
 %raw=load(['../../../MAPFoSt-test-images/test images 7_21_16/stigx[0 ' num2str(i) ' 0][15 0 0][-15 0 0]PixSize8.mat']);
@@ -18,8 +18,9 @@ raw=load(['../../../MAPFoSt-test-images/test images 6_28_16/[' num2str(i) ' 15 -
 I1=double(raw.I1);
 I2=double(raw.I2);
 %subsample image
-I1=I1(1:4:1024,1:4:1024);
-I2=I2(1:4:1024,1:4:1024);
+t=8;
+I1=I1(1:t:1024,1:t:1024);
+I2=I2(1:t:1024,1:t:1024);
 % I1=I1(257:768,257:768);
 % I2=I2(257:768,257:768);
 % I1=I1(385:640,385:640);
@@ -131,7 +132,7 @@ toc;
 if single
     ind=(output(3,:)-output(4,:)>=0);
     ind2=(output(3,:)-output(4,:)<0);
-    disp(num2str(immse(output(1,ind),output(2,ind))));
+    disp(num2str(sqrt(immse(output(1,ind),output(2,ind)))));
     figure;
     plot(r,output(1,:),':',r(ind),output(2,ind),'*',r(ind2),output(2,ind2),'+');
     title('estimated defocus vs actual');
